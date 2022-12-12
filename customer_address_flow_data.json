@@ -1,0 +1,73 @@
+{
+  "field_template": {
+    "data": {
+      "type": "field",
+      "name": "",
+      "slug": "",
+      "field_type": "",
+      "description": "",
+      "required": true,
+      "enabled": true,
+      "relationships": {
+        "flow": {
+          "data": {
+            "type": "flow"
+          }
+        }
+      }
+    }
+  },
+  "address_flow": {
+    "data": {
+      "type": "flow",
+      "name": "Addresses",
+      "slug": "pizzeriaAddresses",
+      "description": "Address model",
+      "enabled": true
+    }
+  },
+  "address_fields": [
+    {
+      "name": "Address",
+      "slug": "address-address",
+      "field_type": "string",
+      "description": "Full address"
+    },
+    {
+      "name": "Alias",
+      "slug": "address-alias",
+      "field_type": "string",
+      "description": "Short name of address"
+    },
+    {
+      "name": "Longitude",
+      "slug": "address-longitude",
+      "field_type": "float",
+      "description": "longitude",
+      "validation_rules": [
+        {
+          "type": "between",
+          "options": {
+            "from": -180.0,
+            "to": 180.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Latitude",
+      "slug": "address-latitude",
+      "field_type": "float",
+      "description": "latitude",
+      "validation_rules": [
+        {
+          "type": "between",
+          "options": {
+            "from": -90.0,
+            "to": 90.0
+          }
+        }
+      ]
+    }
+  ]
+}
