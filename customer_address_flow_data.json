@@ -20,28 +20,22 @@
   "address_flow": {
     "data": {
       "type": "flow",
-      "name": "Addresses",
-      "slug": "pizzeriaAddresses",
-      "description": "Address model",
+      "name": "Customer addresses",
+      "slug": "customer-addresses",
+      "description": "Customer address model",
       "enabled": true
     }
   },
   "address_fields": [
     {
-      "name": "Address",
-      "slug": "address-address",
+      "name": "Customer id",
+      "slug": "customer-addresses-customer-id",
       "field_type": "string",
-      "description": "Full address"
-    },
-    {
-      "name": "Alias",
-      "slug": "address-alias",
-      "field_type": "string",
-      "description": "Short name of address"
+      "description": "Customer model id"
     },
     {
       "name": "Longitude",
-      "slug": "address-longitude",
+      "slug": "customer-addresses-longitude",
       "field_type": "float",
       "description": "longitude",
       "validation_rules": [
@@ -56,7 +50,7 @@
     },
     {
       "name": "Latitude",
-      "slug": "address-latitude",
+      "slug": "customer-addresses-latitude",
       "field_type": "float",
       "description": "latitude",
       "validation_rules": [

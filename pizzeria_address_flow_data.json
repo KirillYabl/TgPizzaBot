@@ -20,8 +20,8 @@
   "address_flow": {
     "data": {
       "type": "flow",
-      "name": "Addresses",
-      "slug": "pizzeriaAddresses",
+      "name": "Pizzeria addresses",
+      "slug": "pizzeria-addresses",
       "description": "Address model",
       "enabled": true
     }
@@ -29,19 +29,19 @@
   "address_fields": [
     {
       "name": "Address",
-      "slug": "address-address",
+      "slug": "pizzeria-addresses-address",
       "field_type": "string",
       "description": "Full address"
     },
     {
       "name": "Alias",
-      "slug": "address-alias",
+      "slug": "pizzeria-addresses-alias",
       "field_type": "string",
       "description": "Short name of address"
     },
     {
       "name": "Longitude",
-      "slug": "address-longitude",
+      "slug": "pizzeria-addresses-longitude",
       "field_type": "float",
       "description": "longitude",
       "validation_rules": [
@@ -56,7 +56,7 @@
     },
     {
       "name": "Latitude",
-      "slug": "address-latitude",
+      "slug": "pizzeria-addresses-latitude",
       "field_type": "float",
       "description": "latitude",
       "validation_rules": [
@@ -68,6 +68,12 @@
           }
         }
       ]
+    },
+    {
+      "name": "Deliveryman telegram chat id",
+      "slug": "pizzeria-addresses-deliveryman-telegram-chat-id",
+      "field_type": "string",
+      "description": "Telegram chat id of delivery man"
     }
   ]
 }
