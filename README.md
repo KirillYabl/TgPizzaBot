@@ -84,7 +84,6 @@ python tg_bot.py
 ### References
 
 - [telegram bots documentation](https://core.telegram.org/bots#creating-a-new-bot)
-- [heroku](https://heroku.com)
 - [redis](https://redislabs.com/)
 - [elasticpath](https://www.elasticpath.com/)
 - [yandex geocoder](https://yandex.ru/dev/maps/geocoder/)
