@@ -19,7 +19,7 @@ from states.waiting_geo import waiting_geo
 logger = logging.getLogger(__name__)
 
 
-def successful_payment_callback(update: Update, context: CallbackContext) -> str:
+def successful_payment_callback(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Thank you for your payment!")
     context.user_data['succesful_callback']()
     del context.user_data['succesful_callback']
