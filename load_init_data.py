@@ -10,12 +10,6 @@ from slugify import Slugify, CYRILLIC
 import motlin_api
 
 
-def get_json_response(url: str) -> Dict[Any, Any]:
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
-
-
 def get_api_suitable_product(product: Dict[str, Any]) -> Dict[str, Any]:
     penny_to_rub_multiplier = 100
     slugify_ru = Slugify(pretranslate=CYRILLIC)
@@ -91,8 +85,13 @@ def main():
     addresses_url = 'https://dvmn.org/media/filer_public/90/90/9090ecbf-249f-42c7-8635-a96985268b88/addresses.json'
     menu_url = 'https://dvmn.org/media/filer_public/a2/5a/a25a7cbd-541c-4caf-9bf9-70dcdf4a592e/menu.json'
 
-    addresses = get_json_response(addresses_url)
-    menu = get_json_response(menu_url)
+    addresses_response = requests.get(addresses_url)
+    addresses_response.raise_for_status()
+    addresses = addresses_response.json()
+
+    menu_response = requests.get(menu_url)
+    menu_response.raise_for_status()
+    menu = menu_response.json()
 
     env = environs.Env()
     env.read_env()
