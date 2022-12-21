@@ -2,20 +2,17 @@ import logging
 from typing import Optional
 
 from telegram import LabeledPrice
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 
 import motlin_api
-import telegram
 
 from common_functions import get_motlin_access_keeper, get_chat_id, get_config, get_customer_id_or_waiting_email
 
 logger = logging.getLogger(__name__)
 
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
-
-def send_invoice(update: UpdateType, context: ContextType, delivery_price: int = 0) -> None:
+def send_invoice(update: Update, context: CallbackContext, delivery_price: int = 0) -> None:
     bot = context.bot
     chat_id = get_chat_id(update)
     title = "Оплата"
@@ -52,7 +49,7 @@ def do_pickup(context, msg, chat_id):
                                context=context)
 
 
-def callback_feedback(context: ContextType, chat_id) -> None:
+def callback_feedback(context: CallbackContext, chat_id) -> None:
     msg = '''Приятного аппетита! *место для рекламы*
 *сообщение что делать если пицца не пришла*'''
     context.bot.send_message(
@@ -61,7 +58,7 @@ def callback_feedback(context: ContextType, chat_id) -> None:
     )
 
 
-def waiting_delivery_type(update: UpdateType, context: ContextType) -> Optional[str]:
+def waiting_delivery_type(update: Update, context: CallbackContext) -> Optional[str]:
     """Condition that wait type of delivery from user."""
     bot = context.bot
     chat_id = get_chat_id(update)

@@ -1,18 +1,15 @@
 import logging
 
-import motlin_api
-import telegram
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 
+import motlin_api
 from common_functions import get_motlin_access_keeper
 
 logger = logging.getLogger(__name__)
 
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
-
-def waiting_email(update: UpdateType, context: ContextType) -> str:
+def waiting_email(update: Update, context: CallbackContext) -> str:
     """Condition that wait email from user."""
     logger.debug('processing user email..')
     bot = context.bot

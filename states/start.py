@@ -2,20 +2,16 @@ import logging
 import math
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 
 import motlin_api
-import telegram
-
 from common_functions import get_motlin_access_keeper, get_chat_id, get_config
 
 logger = logging.getLogger(__name__)
 
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
-
-def start(update: UpdateType, context: ContextType, page_number: int = 1) -> str:
+def start(update: Update, context: CallbackContext, page_number: int = 1) -> str:
     """Bot /start command."""
     bot = context.bot
     access_keeper = get_motlin_access_keeper()

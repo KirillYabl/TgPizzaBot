@@ -2,22 +2,18 @@ import logging
 import time
 
 from geopy import distance
-
-import common_functions
-import motlin_api
-import telegram
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+import motlin_api
+import common_functions
 from common_functions import get_motlin_access_keeper, get_chat_id, get_config
 
 logger = logging.getLogger(__name__)
 
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
-
-def waiting_geo(update: UpdateType, context: ContextType) -> str:
+def waiting_geo(update: Update, context: CallbackContext) -> str:
     """Condition that wait geo from user."""
     logger.debug('processing user geo...')
     bot = context.bot

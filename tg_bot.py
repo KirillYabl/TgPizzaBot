@@ -1,10 +1,10 @@
 import logging
 from typing import Optional
 
-import telegram.ext.callbackcontext
-from telegram import LabeledPrice
 from telegram.ext import Updater, Filters, PreCheckoutQueryHandler
 from telegram.ext import CommandHandler, CallbackQueryHandler, MessageHandler
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 import redis
 
 import motlin_api
@@ -18,10 +18,6 @@ from states.waiting_email import waiting_email
 from states.waiting_geo import waiting_geo
 
 logger = logging.getLogger(__name__)
-
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
 
 def get_database_connection() -> redis.Redis:
@@ -39,7 +35,7 @@ def get_database_connection() -> redis.Redis:
     return _database
 
 
-def successful_payment_callback(update: UpdateType, context: ContextType) -> str:
+def successful_payment_callback(update: Update, context: CallbackContext) -> str:
     # do something after successful receive of payment?
     update.message.reply_text("Thank you for your payment!")
     context.user_data['succesful_callback']()
@@ -49,7 +45,7 @@ def successful_payment_callback(update: UpdateType, context: ContextType) -> str
     return condition
 
 
-def precheckout_callback(update: UpdateType, context: ContextType) -> Optional[str]:
+def precheckout_callback(update: Update, context: CallbackContext) -> Optional[str]:
     query = update.pre_checkout_query
     if 'succesful_callback' not in context.user_data or not context.user_data['succesful_callback']:
         logger.warning('Can not find succesful_callback')
@@ -60,7 +56,7 @@ def precheckout_callback(update: UpdateType, context: ContextType) -> Optional[s
     context.bot.answer_pre_checkout_query(pre_checkout_query_id=query.id, ok=True)
 
 
-def handle_users_reply(update: UpdateType, context: ContextType) -> None:
+def handle_users_reply(update: Update, context: CallbackContext) -> None:
     """Bot's state machine."""
     db = get_database_connection()
     if update.message:
@@ -94,7 +90,7 @@ def handle_users_reply(update: UpdateType, context: ContextType) -> None:
     db.set(chat_id, next_state)
 
 
-def error(update: UpdateType, context: ContextType) -> None:
+def error(update: Update, context: CallbackContext) -> None:
     """Log Errors caused by Updates."""
     logger.warning(f'Update "{update}" caused error "{context.error}"')
 

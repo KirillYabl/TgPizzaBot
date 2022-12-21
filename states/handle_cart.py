@@ -1,19 +1,16 @@
 import logging
 
-import motlin_api
-import telegram
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 
+import motlin_api
 from common_functions import get_motlin_access_keeper, get_chat_id, send_cart_info
 from states.start import start
 
 logger = logging.getLogger(__name__)
 
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
-
-def handle_cart(update: UpdateType, context: ContextType) -> str:
+def handle_cart(update: Update, context: CallbackContext) -> str:
     """Cart menu."""
     bot = context.bot
     chat_id = get_chat_id(update)
