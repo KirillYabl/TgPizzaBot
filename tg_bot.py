@@ -24,7 +24,7 @@ def successful_payment_callback(update: Update, context: CallbackContext) -> str
     context.user_data['succesful_callback']()
     del context.user_data['succesful_callback']
 
-    msg = text = 'Отправьте команду /start если хотите сделать новый заказ'
+    msg = 'Отправьте команду /start если хотите сделать новый заказ'
     bot = context.bot
     chat_id = update.effective_chat.id
     bot.send_message(text=msg, chat_id=chat_id)
