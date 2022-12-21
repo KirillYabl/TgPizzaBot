@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple, Optional, NoReturn
+from typing import Dict, Any, Tuple, Optional
 import logging
 
 import environs
@@ -10,18 +10,6 @@ from telegram.update import Update
 import motlin_api
 
 logger = logging.getLogger(__name__)
-
-
-def raise_response_errors(response: requests.Response) -> NoReturn:
-    """Check response for errors.
-    raise error if some error in response
-    :param response: requests response object
-    """
-    # check HTTPError
-    response.raise_for_status()
-    # some sites can return 200 and write error in body
-    if 'error' in response.json():
-        raise requests.exceptions.HTTPError(response.json()['error'])
 
 
 def fetch_coordinates(apikey: str, address: str) -> Optional[Tuple[float, float]]:

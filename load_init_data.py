@@ -7,13 +7,12 @@ import environs
 import requests
 from slugify import Slugify, CYRILLIC
 
-from not_only_one_state_functions import raise_response_errors
 import motlin_api
 
 
 def get_json_response(url: str) -> Dict[Any, Any]:
     response = requests.get(url)
-    raise_response_errors(response)
+    response.raise_for_status()
     return response.json()
 
 

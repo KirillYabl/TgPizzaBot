@@ -3,8 +3,6 @@ import requests
 import time
 import logging
 
-from not_only_one_state_functions import raise_response_errors
-
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +50,7 @@ class Access:
             }
 
         response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
-        raise_response_errors(response)
+        response.raise_for_status()
 
         response_json = response.json()
 
@@ -89,7 +87,7 @@ def get_all_products(access_keeper):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.get('https://api.moltin.com/v2/products', headers=headers)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     products = response.json()['data']
     logger.debug(f'{len(products)} products was got')
@@ -107,7 +105,7 @@ def get_product_by_id(access_keeper, product_id):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.get(f'https://api.moltin.com/v2/products/{product_id}', headers=headers)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     product = response.json()['data']
     logger.debug('product was got')
@@ -125,7 +123,7 @@ def create_product(access_keeper, product):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.post('https://api.moltin.com/v2/products', headers=headers, json=product)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     new_product = response.json()['data']
     product_id = new_product['id']
@@ -144,7 +142,7 @@ def get_file_href_by_id(access_keeper, file_id):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.get(f'https://api.moltin.com/v2/files/{file_id}', headers=headers)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     href = response.json()['data']['link']['href']
     logger.debug('href was got')
@@ -164,16 +162,17 @@ def add_product_to_cart(access_keeper, product_id, quantity, reference):
     headers = get_authorization_headers(access_keeper)
     headers['Content-Type'] = 'application/json'
 
-    data = {'data':
-        {
-            'id': product_id,
-            'type': 'cart_item',
-            'quantity': int(quantity)  # if not int API return 400
-        }
+    data = {
+        'data':
+            {
+                'id': product_id,
+                'type': 'cart_item',
+                'quantity': int(quantity)  # if not int API return 400
+            }
     }
 
     response = requests.post(f'https://api.moltin.com/v2/carts/{reference}/items', headers=headers, json=data)
-    raise_response_errors(response)
+    response.raise_for_status()
     logger.debug('product was added')
 
     return response.json()
@@ -189,7 +188,7 @@ def get_cart_items_info(access_keeper, reference):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.get(f'https://api.moltin.com/v2/carts/{reference}/items', headers=headers)
-    raise_response_errors(response)
+    response.raise_for_status()
     logger.debug('cart items were got')
 
     response_json = response.json()
@@ -232,7 +231,7 @@ def delete_cart_item(access_keeper, reference, cart_item_id):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.delete(f'https://api.moltin.com/v2/carts/{reference}/items/{cart_item_id}', headers=headers)
-    raise_response_errors(response)
+    response.raise_for_status()
     logger.debug(f'cart item {cart_item_id} was deleted')
 
     return response.json()
@@ -253,7 +252,7 @@ def get_customer_id_by_name_and_email(access_keeper, customer_email, customer_na
         'filter': f'eq(name,{customer_name}):eq(email,{customer_email})'
     }
     response = requests.get('https://api.moltin.com/v2/customers', headers=headers, params=params)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     customers = response.json()['data']
     logger.debug('customers was got')
@@ -290,7 +289,7 @@ def create_customer(access_keeper, name, email):
 
     response = requests.post('https://api.moltin.com/v2/customers', headers=headers, json=data)
     if response.status_code not in [409, 422]:
-        raise_response_errors(response)
+        response.raise_for_status()
         logger.debug('customer was added')
         return response.json()
 
@@ -311,7 +310,7 @@ def upload_image(access_keeper, image_url):
     }
 
     response = requests.post('https://api.moltin.com/v2/files', headers=headers, files=files)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     image = response.json()['data']
     image_id = image['id']
@@ -341,7 +340,7 @@ def upload_image_to_product(access_keeper, product_id, image_url):
 
     url = f'https://api.moltin.com/v2/products/{product_id}/relationships/main-image'
     response = requests.post(url, headers=headers, json=data)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     logger.debug(f'image with id={image_id} was linked with product with id={product_id}')
 
@@ -359,7 +358,7 @@ def create_flow(access_keeper, flow):
     headers['Content-Type'] = 'application/json'
 
     response = requests.post('https://api.moltin.com/v2/flows', headers=headers, json=flow)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     new_flow = response.json()['data']
     flow_id = new_flow['id']
@@ -380,7 +379,7 @@ def create_field(access_keeper, field):
     headers['Content-Type'] = 'application/json'
 
     response = requests.post('https://api.moltin.com/v2/fields', headers=headers, json=field)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     new_field = response.json()['data']
     field_id = new_field['id']
@@ -401,7 +400,7 @@ def upload_entry_to_flow(access_keeper, entry, flow_slug):
     headers['Content-Type'] = 'application/json'
 
     response = requests.post(f'https://api.moltin.com/v2/flows/{flow_slug}/entries', headers=headers, json=entry)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     new_entry = response.json()['data']
     entry_id = new_entry['id']
@@ -420,7 +419,7 @@ def get_all_entries_of_flow(access_keeper, flow_slug):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.get(f'https://api.moltin.com/v2/flows/{flow_slug}/entries', headers=headers)
-    raise_response_errors(response)
+    response.raise_for_status()
 
     entries = response.json()['data']
     logger.debug(f'{len(entries)} entries was got')
