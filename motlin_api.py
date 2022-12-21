@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 class Access:
-    """This class keep and update access token of Motlin
+    """
+    This class keep and update access token of Motlin
     Motlin token only works until "self.expires_in" arrives.
     It's bad practise asc token every query, better save queries.
     """
@@ -34,7 +35,6 @@ class Access:
         token_work = time.time() < self.expires - insurance_period_seconds
 
         if token_work:
-            # No need update token
             return self.access_token
 
         data = {

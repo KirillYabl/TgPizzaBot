@@ -6,6 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import motlin_api
 from not_only_one_state_functions import send_cart_info
+from singletons import access_keeper
 from states.start import start
 
 logger = logging.getLogger(__name__)

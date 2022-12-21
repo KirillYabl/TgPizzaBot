@@ -54,7 +54,6 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
         config['pizzeria_addresses'] = pizza_addresses
         config['pizzeria_addresses_last_update'] = now
 
-    # get nearest pizzeria and distance from user
     nearest_pizzeria = min(
         pizza_addresses,
         key=lambda entry: distance.distance(
@@ -68,7 +67,6 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
         (user_lat, user_lon)
     ).km
 
-    # get customer id
     customer_id, condition = get_customer_id_or_waiting_email(context, update, access_keeper, chat_id)
     if condition:
         return condition

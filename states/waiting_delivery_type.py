@@ -27,8 +27,6 @@ def send_invoice(update: Update, context: CallbackContext, delivery_price: int =
     prices = [LabeledPrice("Test", price)]
     logger.debug('preliminaries for invoice sending ready')
 
-    # optionally pass need_name=True, need_phone_number=True,
-    # need_email=True, need_shipping_address=True, is_flexible=True
     bot.sendInvoice(chat_id, title, description, payload,
                     provider_token, currency, prices)
 
