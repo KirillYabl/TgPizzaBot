@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 def successful_payment_callback(update: Update, context: CallbackContext) -> str:
-    # do something after successful receive of payment?
     update.message.reply_text("Thank you for your payment!")
     context.user_data['succesful_callback']()
     del context.user_data['succesful_callback']
 
-    condition = start(update, context)
-    return condition
+    msg = text = 'Отправьте команду /start если хотите сделать новый заказ'
+    bot = context.bot
+    chat_id = update.effective_chat.id
+    bot.send_message(text=msg, chat_id=chat_id)
 
 
 def precheckout_callback(update: Update, context: CallbackContext) -> Optional[str]:

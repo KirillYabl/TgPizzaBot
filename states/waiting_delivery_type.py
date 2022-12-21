@@ -30,6 +30,7 @@ def send_invoice(update: Update, context: CallbackContext, delivery_price: int =
 
     bot.sendInvoice(chat_id, title, description, payload,
                     provider_token, currency, prices)
+    return 'START'
 
 
 def do_delivery(context, chat_id, deliveryman_chat_id, msg, lat, lon):
@@ -97,4 +98,4 @@ def waiting_delivery_type(update: Update, context: CallbackContext) -> Optional[
         context.user_data['succesful_callback'] = lambda: do_pickup(context, msg, chat_id)
 
     send_invoice(update, context, delivery_price)
-    return 'FAKE_CONDITION'
+    return 'START'
