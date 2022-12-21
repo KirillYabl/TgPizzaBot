@@ -9,7 +9,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from singletons import access_keeper
+from singletons.access_keeper import access_keeper
 
 logger = logging.getLogger(__name__)
 
