@@ -152,13 +152,7 @@ def get_customer_id(context: CallbackContext, update: Update, access_keeper: "mo
         return customer_id
 
     customer_email = context.user_data.get('email', '')
-    if update.message:
-        customer_name = update.message.chat.username
-    elif update.callback_query:
-        customer_name = update.callback_query.message.chat.username
-    else:
-        customer_name = ''
-
+    customer_name = update.effective_user.username
     customer_id = motlin_api.get_customer_id_by_name_and_email(access_keeper, customer_email, customer_name)
     return customer_id
 
