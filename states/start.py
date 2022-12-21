@@ -6,7 +6,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from common_functions import get_motlin_access_keeper, get_config
+from not_only_one_state_functions import get_motlin_access_keeper, get_config
 
 logger = logging.getLogger(__name__)
 

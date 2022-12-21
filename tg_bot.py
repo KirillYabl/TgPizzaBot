@@ -1,3 +1,5 @@
+"""The module with functions which useful for more then one state and bot itself"""
+
 import logging
 from typing import Optional
 
@@ -7,7 +9,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 import redis
 
-from common_functions import get_config
+from not_only_one_state_functions import get_config
 from states.handle_cart import handle_cart
 from states.handle_description import handle_description
 from states.handle_menu import handle_menu

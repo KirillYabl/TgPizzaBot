@@ -7,7 +7,7 @@ import environs
 import requests
 from slugify import Slugify, CYRILLIC
 
-from common_functions import raise_response_errors
+from not_only_one_state_functions import raise_response_errors
 import motlin_api
 
 

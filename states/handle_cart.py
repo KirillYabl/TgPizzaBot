@@ -4,7 +4,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from common_functions import get_motlin_access_keeper, send_cart_info
+from not_only_one_state_functions import get_motlin_access_keeper, send_cart_info
 from states.start import start
 
 logger = logging.getLogger(__name__)

@@ -3,7 +3,7 @@ import requests
 import time
 import logging
 
-from common_functions import raise_response_errors
+from not_only_one_state_functions import raise_response_errors
 
 logger = logging.getLogger(__name__)
 

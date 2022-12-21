@@ -7,8 +7,12 @@ from telegram.update import Update
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import motlin_api
-import common_functions
-from common_functions import get_motlin_access_keeper, get_config
+from not_only_one_state_functions import get_address_entry_lat_lon
+from not_only_one_state_functions import get_config
+from not_only_one_state_functions import get_customer_id_or_waiting_email
+from not_only_one_state_functions import get_delivery_price
+from not_only_one_state_functions import get_motlin_access_keeper
+from not_only_one_state_functions import fetch_coordinates
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +30,7 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     elif update.message:
         logger.debug('user send location by text')
         apikey = config['yandex_geo_apikey']
-        current_pos = common_functions.fetch_coordinates(apikey, update.message.text)
+        current_pos = fetch_coordinates(apikey, update.message.text)
     else:
         logger.debug('user did not send any message')
         current_pos = None
@@ -57,18 +61,18 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     nearest_pizzeria = min(
         pizza_addresses,
         key=lambda entry: distance.distance(
-            common_functions.get_address_entry_lat_lon(entry),
+            get_address_entry_lat_lon(entry),
             (user_lat, user_lon)
         )
     )
     context.user_data['nearest_pizzeria'] = nearest_pizzeria
     nearest_pizzeria_distance_km = distance.distance(
-        common_functions.get_address_entry_lat_lon(nearest_pizzeria),
+        get_address_entry_lat_lon(nearest_pizzeria),
         (user_lat, user_lon)
     ).km
 
     # get customer id
-    customer_id, condition = common_functions.get_customer_id_or_waiting_email(context, update, access_keeper, chat_id)
+    customer_id, condition = get_customer_id_or_waiting_email(context, update, access_keeper, chat_id)
     if condition:
         return condition
 
@@ -85,7 +89,7 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     motlin_api.upload_entry_to_flow(access_keeper, entry, customer_addresses_flow_slug)
 
     # add delivery type buttons
-    is_deliverable, delivery_price, msg = common_functions.get_delivery_price(nearest_pizzeria_distance_km)
+    is_deliverable, delivery_price, msg = get_delivery_price(nearest_pizzeria_distance_km)
     delivery_btn = InlineKeyboardButton('Доставка', callback_data=f'delivery:{delivery_price}')
     pickup_btn = InlineKeyboardButton('Самовывоз', callback_data='pickup')
     if is_deliverable:
