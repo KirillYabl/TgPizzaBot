@@ -20,18 +20,17 @@ from states.waiting_geo import waiting_geo
 
 logger = logging.getLogger(__name__)
 
+_database = None
+
 
 def get_database_connection() -> redis.Redis:
     """Returns a connection to Redis DB or creates a new one if it does not already exist."""
     global _database
-    try:
-        return _database
-    except NameError:
-        pass
-    _database = redis.Redis(host=config['redis_db_address'],
-                            port=config['redis_db_port'],
-                            password=config['redis_db_password'])
-    logger.debug('connection with Redis DB was established')
+    if _database is None:
+        _database = redis.Redis(host=config['redis_db_address'],
+                                port=config['redis_db_port'],
+                                password=config['redis_db_password'])
+        logger.debug('connection with Redis DB was established')
     return _database
 
 
