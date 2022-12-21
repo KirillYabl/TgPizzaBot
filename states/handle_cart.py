@@ -5,7 +5,7 @@ from telegram.update import Update
 
 import motlin_api
 from not_only_one_state_functions import send_cart_info
-from singletons import access_keeper
+from singletons.access_keeper import access_keeper
 from states.start import start
 
 logger = logging.getLogger(__name__)

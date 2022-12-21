@@ -1,3 +1,5 @@
+"""The module with functions which useful for more then one state and bot itself"""
+
 from typing import Dict, Any, Tuple, Optional
 import logging
 

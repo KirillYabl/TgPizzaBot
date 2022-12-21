@@ -1,5 +1,3 @@
-"""The module with functions which useful for more then one state and bot itself"""
-
 import logging
 from typing import Optional
 
@@ -7,9 +5,9 @@ from telegram.ext import Updater, Filters, PreCheckoutQueryHandler
 from telegram.ext import CommandHandler, CallbackQueryHandler, MessageHandler
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
-import redis
 
-from singletons import config
+from singletons.config import config
+from singletons.redis_connection import redis_connection
 from states.handle_cart import handle_cart
 from states.handle_description import handle_description
 from states.handle_menu import handle_menu
@@ -19,19 +17,6 @@ from states.waiting_email import waiting_email
 from states.waiting_geo import waiting_geo
 
 logger = logging.getLogger(__name__)
-
-_database = None
-
-
-def get_database_connection() -> redis.Redis:
-    """Returns a connection to Redis DB or creates a new one if it does not already exist."""
-    global _database
-    if _database is None:
-        _database = redis.Redis(host=config['redis_db_address'],
-                                port=config['redis_db_port'],
-                                password=config['redis_db_password'])
-        logger.debug('connection with Redis DB was established')
-    return _database
 
 
 def successful_payment_callback(update: Update, context: CallbackContext) -> str:
@@ -57,7 +42,6 @@ def precheckout_callback(update: Update, context: CallbackContext) -> Optional[s
 
 def handle_users_reply(update: Update, context: CallbackContext) -> None:
     """Bot's state machine."""
-    db = get_database_connection()
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -69,9 +53,9 @@ def handle_users_reply(update: Update, context: CallbackContext) -> None:
 
     if user_reply == '/start':
         user_state = 'START'
-        db.set(chat_id, user_state)
+        redis_connection.set(chat_id, user_state)
     else:
-        user_state = db.get(chat_id).decode("utf-8")
+        user_state = redis_connection.get(chat_id).decode("utf-8")
 
     logger.debug(f'User state: {user_state}')
 
@@ -86,7 +70,7 @@ def handle_users_reply(update: Update, context: CallbackContext) -> None:
     }
     state_handler = states_functions[user_state]
     next_state = state_handler(update, context)
-    db.set(chat_id, next_state)
+    redis_connection.set(chat_id, next_state)
 
 
 def error(update: Update, context: CallbackContext) -> None:
