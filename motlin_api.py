@@ -49,10 +49,10 @@ class Access:
         response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
         response.raise_for_status()
 
-        response_json = response.json()
+        response = response.json()
 
-        self.access_token = response_json['access_token']
-        self.expires = response_json['expires']
+        self.access_token = response['access_token']
+        self.expires = response['expires']
 
         logger.debug('motlin access token was updated')
 
@@ -188,8 +188,8 @@ def get_cart_items_info(access_keeper, reference):
     response.raise_for_status()
     logger.debug('cart items were got')
 
-    response_json = response.json()
-    items_in_cart = response_json['data']
+    response = response.json()
+    items_in_cart = response['data']
 
     logger.debug(f'{len(items_in_cart)} items in cart')
 
@@ -207,8 +207,8 @@ def get_cart_items_info(access_keeper, reference):
         items_in_cart_for_response['products'].append(item_in_cart)
         logger.debug(f'item {item["id"]} was handled')
 
-    total_price = response_json['meta']['display_price']['with_tax']['formatted']
-    total_price_amount = response_json['meta']['display_price']['with_tax']['amount']
+    total_price = response['meta']['display_price']['with_tax']['formatted']
+    total_price_amount = response['meta']['display_price']['with_tax']['amount']
     items_in_cart_for_response['total_price'] = total_price
     items_in_cart_for_response['total_price_amount'] = total_price_amount
 
