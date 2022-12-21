@@ -8,12 +8,10 @@ logger = logging.getLogger(__name__)
 env = environs.Env()
 env.read_env()
 
-# config singleton
 config = {
-    'tg_bot_token': env.str('TG_BOT_TOKEN'), 'proxy': env.str('PROXY', None),
-    'motlin_client_id': env.str("MOTLIN_CLIENT_ID"), 'motlin_client_secret': env.str("MOTLIN_CLIENT_SECRET"),
-    'redis_db_password': env.str("REDIS_DB_PASSWORD"), 'redis_db_address': env.str("REDIS_DB_ADDRESS"),
-    'redis_db_port': env.int("REDIS_DB_PORT"), 'products_on_page': env.int("PRODUCTS_ON_PAGE", 8),
+    'tg_bot_token': env.str('TG_BOT_TOKEN'),
+    'proxy': env.str('PROXY', None),
+    'products_on_page': env.int("PRODUCTS_ON_PAGE", 8),
     'yandex_geo_apikey': env.str("YANDEX_GEO_APIKEY"),
     'pizzeria_addresses_flow_slug': env.str("PIZZERIA_ADDRESSES_FLOW_SLUG", "pizzeria-addresses"),
     'customer_addresses_flow_slug': env.str("CUSTOMER_ADDRESSES_FLOW_SLUG", "customer-addresses"),
