@@ -69,7 +69,7 @@ def send_cart_info(context: CallbackContext, update: Update) -> str:
     keyboard.append([InlineKeyboardButton('В меню', callback_data='to_menu')])
     keyboard.append([InlineKeyboardButton('Оплата', callback_data='payment')])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    logger.debug(f'keyboard was constructed')
+    logger.debug('keyboard was constructed')
 
     msg = '\n\n'.join(product_messages) + f'\n\nОбщая цена: {total_price}'
     context.user_data['cart_msg'] = msg

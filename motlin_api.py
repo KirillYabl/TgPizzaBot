@@ -350,7 +350,7 @@ def create_flow(access_keeper, flow):
     :param flow: dict, flow data with name, description, slug, etc...
     :return: int, id of created flow
     """
-    logger.debug(f'creating flow...')
+    logger.debug('creating flow...')
     headers = get_authorization_headers(access_keeper)
     headers['Content-Type'] = 'application/json'
 
@@ -412,7 +412,7 @@ def get_all_entries_of_flow(access_keeper, flow_slug):
     :param flow_slug: str, slug of flow
     :return: list of dicts, list of entries where entry is dict
     """
-    logger.debug(f'getting entries...')
+    logger.debug('getting entries...')
     headers = get_authorization_headers(access_keeper)
 
     response = requests.get(f'https://api.moltin.com/v2/flows/{flow_slug}/entries', headers=headers)

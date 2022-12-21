@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 def handle_description(update: Update, context: CallbackContext) -> str:
     """Product description menu."""
-    bot = context.bot
     chat_id = update.effective_chat.id
     query = update.callback_query
     if query.data == 'back_to_products':

@@ -64,7 +64,7 @@ def start(update: Update, context: CallbackContext, page_number: int = 1) -> str
     keyboard.append([InlineKeyboardButton('Корзина', callback_data='cart')])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    logger.debug(f'keyboard was constructed')
+    logger.debug('keyboard was constructed')
 
     bot.send_message(text='Выберите продукт', reply_markup=reply_markup, chat_id=chat_id)
 

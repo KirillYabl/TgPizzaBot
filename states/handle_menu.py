@@ -47,7 +47,7 @@ def handle_menu(update: Update, context: CallbackContext) -> str:
     add_to_cart_buttons = []
     # If you need to add few variations (like 1, 3, 5 quantity) make a cycle and buttons will stand one-row
     callback_data = f'{product_id}\n1'
-    add_to_cart_buttons.append(InlineKeyboardButton(f'Добавить в корзину', callback_data=callback_data))
+    add_to_cart_buttons.append(InlineKeyboardButton('Добавить в корзину', callback_data=callback_data))
 
     keyboard = [
         add_to_cart_buttons,
