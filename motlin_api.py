@@ -43,11 +43,8 @@ class Access:
         }
 
         if self.client_secret is not None:
-            data = {
-                'client_id': self.client_id,
-                'client_secret': self.client_secret,
-                'grant_type': 'client_credentials'
-            }
+            data['client_secret'] = self.client_secret,
+            data['grant_type'] = 'client_credentials'
 
         response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
         response.raise_for_status()
