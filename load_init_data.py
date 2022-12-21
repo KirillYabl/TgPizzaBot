@@ -104,13 +104,13 @@ def main():
 
     upload_menu(menu, access_keeper)
 
-    with open('pizzeria_address_flow_data.json') as f:
+    with open('pizzeria_address_flow.json') as f:
         pizzeria_address_flow_data = json.load(f)
     create_address_flow(access_keeper, pizzeria_address_flow_data)
     pizzeria_address_slug = pizzeria_address_flow_data['address_flow']['data']['slug']
     upload_addresses(addresses, access_keeper, pizzeria_address_slug, test_telegram_chat_id)
 
-    with open('customer_address_flow_data.json') as f:
+    with open('customer_address_flow.json') as f:
         customer_address_flow_data = json.load(f)
     create_address_flow(access_keeper, customer_address_flow_data)
 

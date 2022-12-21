@@ -46,14 +46,14 @@ You can leave it blank, but in this case you must add this to the pizzeria data 
 each pizzeria).
 
 `CUSTOMER_ADDRESSES_FLOW_SLUG` and `PIZZERIA_ADDRESSES_FLOW_SLUG` - Optional. Slugs of moltin models.
-You can leave it blank if you chose the default, but you must also change it in `customer_address_flow_data.json`
-and `pizzeria_address_flow_data.json`.
+You can leave it blank if you chose the default, but you must also change it in `customer_address_flow.json`
+and `pizzeria_address_flow.json`.
 You will need to change `address_flow -> data -> slug` for both files.
 
 `PIZZERIA_ADDRESSES_DELIVERYMAN_TELEGRAM_CHAT_ID`, `PIZZERIA_ADDRESSES_ADDRESS`, `CUSTOMER_ADDRESSES_CUSTOMER_ID_SLUG`
 , `CUSTOMER_ADDRESSES_LONGITUDE_SLUG`, `CUSTOMER_ADDRESSES_LATITUDE_SLUG` - Optional. Slugs for model fields.
 You can leave it blank, but if you want to fill it in manually, you must also change these slugs in
-the `customer_address_flow_data.json` and `pizzeria_address_flow_data.json` files.
+the `customer_address_flow.json` and `pizzeria_address_flow.json` files.
 This data is stored in `address_fields -> slug` for each field.
 
 `PRODUCTS_ON_PAGE` - Optional. By default, maximum 8 products (pizza) per page in telegram.
