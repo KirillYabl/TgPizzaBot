@@ -6,7 +6,8 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from not_only_one_state_functions import get_motlin_access_keeper, get_config, get_customer_id_or_waiting_email
+from not_only_one_state_functions import get_customer_id_or_waiting_email
+from singletons import access_keeper, config
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +19,8 @@ def send_invoice(update: Update, context: CallbackContext, delivery_price: int =
     description = "Пожалуйста, оплатите вашу пиццу"
     # select a payload just for you to recognize its the donation from your bot
     payload = "Dvmn-Pizza-Bot-Payload"
-    provider_token = get_config()['bank_token']
+    provider_token = config['bank_token']
     currency = "RUB"
-    access_keeper = get_motlin_access_keeper()
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
     price = cart_items_info['total_price_amount']
     price += delivery_price
@@ -62,8 +62,6 @@ def waiting_delivery_type(update: Update, context: CallbackContext) -> Optional[
     bot = context.bot
     chat_id = update.effective_chat.id
     query = update.callback_query
-    config = get_config()
-    access_keeper = get_motlin_access_keeper()
     logger.debug(f'query.data = {query.data}')
 
     customer_id, condition = get_customer_id_or_waiting_email(context, update, access_keeper, chat_id)
@@ -79,7 +77,6 @@ def waiting_delivery_type(update: Update, context: CallbackContext) -> Optional[
 
     if query.data.startswith('delivery'):
         delivery_price = int(query.data.split(':')[-1])
-        config = get_config()
         flow_slug = config['customer_addresses_flow_slug']
         customers = motlin_api.get_all_entries_of_flow(access_keeper, flow_slug)
         for customer in customers:

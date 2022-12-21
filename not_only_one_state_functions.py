@@ -1,13 +1,13 @@
 from typing import Dict, Any, Tuple, Optional
 import logging
 
-import environs
 import requests
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
+from singletons import access_keeper
 
 logger = logging.getLogger(__name__)
 
@@ -47,66 +47,10 @@ def get_delivery_price(distance: float) -> Tuple[bool, int, str]:
         return False, 0, 'Доставка не производится, вы можете забрать заказ самостотельно.'
 
 
-def get_config() -> Dict[str, Any]:
-    """Get config."""
-    global _config
-
-    try:
-        return _config
-    except NameError:
-        pass
-    _config = {}
-
-    env = environs.Env()
-    env.read_env()
-
-    _config['tg_bot_token'] = env.str('TG_BOT_TOKEN')
-    _config['proxy'] = env.str('PROXY', None)
-    _config['motlin_client_id'] = env.str("MOTLIN_CLIENT_ID")
-    _config['motlin_client_secret'] = env.str("MOTLIN_CLIENT_SECRET")
-    _config['redis_db_password'] = env.str("REDIS_DB_PASSWORD")
-    _config['redis_db_address'] = env.str("REDIS_DB_ADDRESS")
-    _config['redis_db_port'] = env.int("REDIS_DB_PORT")
-    _config['products_on_page'] = env.int("PRODUCTS_ON_PAGE", 8)
-    _config['yandex_geo_apikey'] = env.str("YANDEX_GEO_APIKEY")
-    _config['pizzeria_addresses_flow_slug'] = env.str("PIZZERIA_ADDRESSES_FLOW_SLUG", "pizzeria-addresses")
-    _config['customer_addresses_flow_slug'] = env.str("CUSTOMER_ADDRESSES_FLOW_SLUG", "customer-addresses")
-    _config['customer_addresses_customer_id_slug'] = env.str("CUSTOMER_ADDRESSES_CUSTOMER_ID_SLUG",
-                                                             "customer-addresses-customer-id")
-    _config['customer_addresses_longitude_slug'] = env.str("CUSTOMER_ADDRESSES_LONGITUDE_SLUG",
-                                                           "customer-addresses-longitude")
-    _config['customer_addresses_latitude_slug'] = env.str("CUSTOMER_ADDRESSES_LATITUDE_SLUG",
-                                                          "customer-addresses-latitude")
-    _config['pizzeria_addresses_deliveryman_telegram_chat_id'] = env.str(
-        "PIZZERIA_ADDRESSES_DELIVERYMAN_TELEGRAM_CHAT_ID",
-        "pizzeria-addresses-deliveryman-telegram-chat-id")
-    _config['pizzeria_addresses_address'] = env.str("PIZZERIA_ADDRESSES_ADDRESS", "pizzeria-addresses-address")
-    _config['bank_token'] = env.str("BANK_TOKEN")
-    logger.debug('.env was read, config was constructed')
-
-    return _config
-
-
-def get_motlin_access_keeper() -> "motlin_api.Access":
-    """Get object which keep motlin API access."""
-    global _access_keeper
-
-    try:
-        return _access_keeper
-    except NameError:
-        pass
-    config = get_config()
-    _access_keeper = motlin_api.Access(config['motlin_client_id'], config['motlin_client_secret'])
-
-    logger.debug('access_keeper was got')
-    return _access_keeper
-
-
 def send_cart_info(context: CallbackContext, update: Update) -> str:
     """Send message with cart info (name, description, price per unit, quantity, total_price)."""
     bot = context.bot
     chat_id = update.effective_chat.id
-    access_keeper = get_motlin_access_keeper()
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
     total_price = cart_items_info['total_price']
     product_messages = []

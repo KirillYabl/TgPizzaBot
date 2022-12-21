@@ -6,7 +6,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from not_only_one_state_functions import get_motlin_access_keeper, get_config
+from singletons import access_keeper, config
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +14,13 @@ logger = logging.getLogger(__name__)
 def start(update: Update, context: CallbackContext, page_number: int = 1) -> str:
     """Bot /start command."""
     bot = context.bot
-    access_keeper = get_motlin_access_keeper()
     products = motlin_api.get_all_products(access_keeper)
     chat_id = update.effective_chat.id
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
     products_in_cart = {product['product_id']: product for product in cart_items_info['products']}
 
     keyboard = []
-    products_on_page = get_config()['products_on_page']
+    products_on_page = config['products_on_page']
     logger.debug(f'page_number = {page_number}')
 
     start_product_index = (page_number - 1) * products_on_page

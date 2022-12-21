@@ -9,7 +9,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 import redis
 
-from not_only_one_state_functions import get_config
+from singletons import config
 from states.handle_cart import handle_cart
 from states.handle_description import handle_description
 from states.handle_menu import handle_menu
@@ -28,7 +28,6 @@ def get_database_connection() -> redis.Redis:
         return _database
     except NameError:
         pass
-    config = get_config()
     _database = redis.Redis(host=config['redis_db_address'],
                             port=config['redis_db_port'],
                             password=config['redis_db_password'])
@@ -99,7 +98,6 @@ def error(update: Update, context: CallbackContext) -> None:
 def main():
     logging.basicConfig(format='%(asctime)s  %(name)s  %(levelname)s  %(message)s', level=logging.DEBUG)
 
-    config = get_config()
     # Create the Updater and pass it your bot's token.
     request_kwargs = None
     if config['proxy']:

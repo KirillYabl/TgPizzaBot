@@ -8,11 +8,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import motlin_api
 from not_only_one_state_functions import get_address_entry_lat_lon
-from not_only_one_state_functions import get_config
 from not_only_one_state_functions import get_customer_id_or_waiting_email
 from not_only_one_state_functions import get_delivery_price
-from not_only_one_state_functions import get_motlin_access_keeper
 from not_only_one_state_functions import fetch_coordinates
+from singletons import access_keeper, config
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,6 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     logger.debug('processing user geo...')
     bot = context.bot
     chat_id = update.effective_chat.id
-    config = get_config()
 
     if update.message and update.message.location:
         logger.debug('user send location by telegram')
@@ -42,7 +40,6 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
         return 'WAITING_GEO'
 
     user_lon, user_lat = current_pos
-    access_keeper = get_motlin_access_keeper()
     now = int(time.time())
     seconds_in_day = 86400
 

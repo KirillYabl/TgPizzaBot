@@ -4,7 +4,8 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from not_only_one_state_functions import get_motlin_access_keeper, send_cart_info
+from not_only_one_state_functions import send_cart_info
+from singletons import access_keeper
 from states.start import start
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,6 @@ def handle_description(update: Update, context: CallbackContext) -> str:
         condition = send_cart_info(context, update)
         return condition
 
-    access_keeper = get_motlin_access_keeper()
     product_id, quantity = query.data.split()
     logger.debug(f'User chose add product to cart. Product_id = {product_id}; quantity={quantity}')
     motlin_api.add_product_to_cart(access_keeper, product_id, quantity, chat_id)

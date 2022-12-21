@@ -4,7 +4,8 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from not_only_one_state_functions import get_motlin_access_keeper, send_cart_info
+from not_only_one_state_functions import send_cart_info
+from singletons import access_keeper
 from states.start import start
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,6 @@ def handle_cart(update: Update, context: CallbackContext) -> str:
         bot.send_message(text=msg, chat_id=chat_id)
         return 'WAITING_EMAIL'
 
-    access_keeper = get_motlin_access_keeper()
     cart_item_id = query.data
     logger.debug(f'User deleting item from cart, cart_item_id: {cart_item_id}')
     motlin_api.delete_cart_item(access_keeper, chat_id, cart_item_id)

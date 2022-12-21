@@ -4,7 +4,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from not_only_one_state_functions import get_motlin_access_keeper
+from singletons import access_keeper
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,6 @@ def waiting_email(update: Update, context: CallbackContext) -> str:
     user_email = ''
     if update.message:
         user_email = update.message.text
-    access_keeper = get_motlin_access_keeper()
 
     customer_or_status_code = motlin_api.create_customer(access_keeper=access_keeper,
                                                          name=update.message.chat.username,
