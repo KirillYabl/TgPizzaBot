@@ -3,16 +3,13 @@ import logging
 
 import environs
 import requests
-import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext.callbackcontext import CallbackContext
+from telegram.update import Update
 
 import motlin_api
 
 logger = logging.getLogger(__name__)
-
-# for typing
-ContextType = telegram.ext.callbackcontext.CallbackContext
-UpdateType = telegram.update.Update
 
 
 def raise_response_errors(response: requests.Response) -> NoReturn:
@@ -117,21 +114,10 @@ def get_motlin_access_keeper() -> "motlin_api.Access":
     return _access_keeper
 
 
-def get_chat_id(update: UpdateType) -> int:
-    """Get chat_id which storage place depends on message type."""
-    if update.message:
-        chat_id = update.message.chat_id
-    elif update.callback_query:
-        chat_id = update.callback_query.message.chat_id
-    elif update.pre_checkout_query:
-        chat_id = update.pre_checkout_query.from_user.id
-    return chat_id
-
-
-def send_cart_info(context: ContextType, update: UpdateType) -> str:
+def send_cart_info(context: CallbackContext, update: Update) -> str:
     """Send message with cart info (name, description, price per unit, quantity, total_price)."""
     bot = context.bot
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     access_keeper = get_motlin_access_keeper()
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
     total_price = cart_items_info['total_price']
@@ -159,7 +145,7 @@ def send_cart_info(context: ContextType, update: UpdateType) -> str:
     return 'HANDLE_CART'
 
 
-def get_customer_id(context: ContextType, update: UpdateType, access_keeper: "motlin_api.Access") -> str:
+def get_customer_id(context: CallbackContext, update: Update, access_keeper: "motlin_api.Access") -> str:
     """Get customer_id from cache or from api."""
     customer_id = context.user_data.get('customer_id', None)
     if customer_id is not None:
@@ -177,7 +163,7 @@ def get_customer_id(context: ContextType, update: UpdateType, access_keeper: "mo
     return customer_id
 
 
-def get_customer_id_or_waiting_email(context: ContextType, update: UpdateType,
+def get_customer_id_or_waiting_email(context: CallbackContext, update: Update,
                                      access_keeper: "motlin_api.Access", chat_id: int) -> Tuple[str, str]:
     """Get customer_id or return WAITING_EMAIL condition if it was error while getting customer id."""
     try:

@@ -4,7 +4,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from common_functions import get_motlin_access_keeper, get_chat_id, send_cart_info
+from common_functions import get_motlin_access_keeper, send_cart_info
 from states.start import start
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def handle_description(update: Update, context: CallbackContext) -> str:
     """Product description menu."""
     bot = context.bot
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     query = update.callback_query
     if query.data == 'back_to_products':
         logger.debug('User chose return to products')

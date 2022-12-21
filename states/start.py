@@ -6,7 +6,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from common_functions import get_motlin_access_keeper, get_chat_id, get_config
+from common_functions import get_motlin_access_keeper, get_config
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def start(update: Update, context: CallbackContext, page_number: int = 1) -> str
     bot = context.bot
     access_keeper = get_motlin_access_keeper()
     products = motlin_api.get_all_products(access_keeper)
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
     products_in_cart = {product['product_id']: product for product in cart_items_info['products']}
 

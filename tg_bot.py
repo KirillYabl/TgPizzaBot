@@ -7,8 +7,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 import redis
 
-import motlin_api
-from common_functions import get_config, get_chat_id
+from common_functions import get_config
 from states.handle_cart import handle_cart
 from states.handle_description import handle_description
 from states.handle_menu import handle_menu

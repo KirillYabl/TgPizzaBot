@@ -8,7 +8,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import motlin_api
 import common_functions
-from common_functions import get_motlin_access_keeper, get_chat_id, get_config
+from common_functions import get_motlin_access_keeper, get_config
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     """Condition that wait geo from user."""
     logger.debug('processing user geo...')
     bot = context.bot
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     config = get_config()
 
     if update.message and update.message.location:

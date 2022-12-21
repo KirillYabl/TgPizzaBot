@@ -4,7 +4,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from common_functions import get_motlin_access_keeper, get_chat_id, send_cart_info
+from common_functions import get_motlin_access_keeper, send_cart_info
 from states.start import start
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def handle_cart(update: Update, context: CallbackContext) -> str:
     """Cart menu."""
     bot = context.bot
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     query = update.callback_query
     if query.data == 'to_menu':
         logger.debug('User chose return to menu')

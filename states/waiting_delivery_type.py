@@ -7,14 +7,14 @@ from telegram.update import Update
 
 import motlin_api
 
-from common_functions import get_motlin_access_keeper, get_chat_id, get_config, get_customer_id_or_waiting_email
+from common_functions import get_motlin_access_keeper, get_config, get_customer_id_or_waiting_email
 
 logger = logging.getLogger(__name__)
 
 
 def send_invoice(update: Update, context: CallbackContext, delivery_price: int = 0) -> None:
     bot = context.bot
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     title = "Оплата"
     description = "Пожалуйста, оплатите вашу пиццу"
     # select a payload just for you to recognize its the donation from your bot
@@ -61,7 +61,7 @@ def callback_feedback(context: CallbackContext, chat_id) -> None:
 def waiting_delivery_type(update: Update, context: CallbackContext) -> Optional[str]:
     """Condition that wait type of delivery from user."""
     bot = context.bot
-    chat_id = get_chat_id(update)
+    chat_id = update.effective_chat.id
     query = update.callback_query
     config = get_config()
     access_keeper = get_motlin_access_keeper()
