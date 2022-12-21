@@ -37,8 +37,6 @@ def handle_menu(update: Update, context: CallbackContext) -> str:
     image_id = product['relationships']['main_image']['data']['id']
     image_href = motlin_api.get_file_href_by_id(access_keeper, image_id)
 
-    bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
-
     msg = f"""
     {product['name']}
     {product['meta']['display_price']['with_tax']['formatted']}
@@ -60,4 +58,5 @@ def handle_menu(update: Update, context: CallbackContext) -> str:
     logger.debug('Keyboard was constructed')
 
     bot.send_photo(chat_id=chat_id, photo=image_href, caption=msg, reply_markup=reply_markup)
+    bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
     return 'HANDLE_DESCRIPTION'
