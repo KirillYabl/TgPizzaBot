@@ -82,7 +82,6 @@ def error(update: Update, context: CallbackContext) -> None:
 def main():
     logging.basicConfig(format='%(asctime)s  %(name)s  %(levelname)s  %(message)s', level=logging.DEBUG)
 
-    # Create the Updater and pass it your bot's token.
     request_kwargs = None
     if config['proxy']:
         request_kwargs = {'proxy_url': config['proxy']}
@@ -97,7 +96,6 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_error_handler(error)
 
-    # Start the Bot
     updater.start_polling()
 
     # need to job queue work
