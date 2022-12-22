@@ -6,7 +6,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from not_only_one_state_functions import get_customer_id_or_waiting_email
+from utils.customer_tg_utils import get_customer_id_or_waiting_email
 
 logger = logging.getLogger(__name__)
 

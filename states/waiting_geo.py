@@ -7,10 +7,10 @@ from telegram.update import Update
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import motlin_api
-from not_only_one_state_functions import get_address_entry_lat_lon
-from not_only_one_state_functions import get_customer_id_or_waiting_email
-from not_only_one_state_functions import get_delivery_price
-from not_only_one_state_functions import fetch_coordinates
+from utils.geo_utils import get_address_entry_lat_lon
+from utils.customer_tg_utils import get_customer_id_or_waiting_email
+from utils.geo_utils import get_delivery_price_by_distance
+from utils.geo_utils import fetch_coordinates
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     motlin_api.upload_entry_to_flow(access_keeper, entry, customer_addresses_flow_slug)
 
     # add delivery type buttons
-    is_deliverable, delivery_price, msg = get_delivery_price(nearest_pizzeria_distance_km)
+    is_deliverable, delivery_price, msg = get_delivery_price_by_distance(nearest_pizzeria_distance_km)
     delivery_btn = InlineKeyboardButton('Доставка', callback_data=f'delivery:{delivery_price}')
     pickup_btn = InlineKeyboardButton('Самовывоз', callback_data='pickup')
     if is_deliverable:
