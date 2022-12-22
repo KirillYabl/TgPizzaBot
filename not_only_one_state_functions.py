@@ -9,7 +9,6 @@ from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
 import motlin_api
-from singletons.access_keeper import access_keeper
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ def send_cart_info(context: CallbackContext, update: Update) -> str:
     """Send message with cart info (name, description, price per unit, quantity, total_price)."""
     bot = context.bot
     chat_id = update.effective_chat.id
-    cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
+    cart_items_info = motlin_api.get_cart_items_info(context.bot_data['access_keeper'], chat_id)
     total_price = cart_items_info['total_price']
     product_messages = []
     keyboard = []

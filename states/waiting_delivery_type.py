@@ -7,8 +7,6 @@ from telegram.update import Update
 
 import motlin_api
 from not_only_one_state_functions import get_customer_id_or_waiting_email
-from singletons.access_keeper import access_keeper
-from singletons.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +18,9 @@ def send_invoice(update: Update, context: CallbackContext, delivery_price: int =
     description = "Пожалуйста, оплатите вашу пиццу"
     # select a payload just for you to recognize its the donation from your bot
     payload = "Dvmn-Pizza-Bot-Payload"
-    provider_token = config['bank_token']
+    provider_token = context.bot_data['config']['bank_token']
     currency = "RUB"
-    cart_items_info = motlin_api.get_cart_items_info(access_keeper, chat_id)
+    cart_items_info = motlin_api.get_cart_items_info(context.bot_data['access_keeper'], chat_id)
     price = cart_items_info['total_price_amount']
     price += delivery_price
     prices = [LabeledPrice("Test", price)]
@@ -30,7 +28,6 @@ def send_invoice(update: Update, context: CallbackContext, delivery_price: int =
 
     bot.sendInvoice(chat_id, title, description, payload,
                     provider_token, currency, prices)
-    return 'START'
 
 
 def do_delivery(context, chat_id, deliveryman_chat_id, msg, lat, lon):
@@ -63,6 +60,8 @@ def waiting_delivery_type(update: Update, context: CallbackContext) -> Optional[
     chat_id = update.effective_chat.id
     query = update.callback_query
     logger.debug(f'query.data = {query.data}')
+    config = context.bot_data['config']
+    access_keeper = context.bot_data['access_keeper']
 
     customer_id, condition = get_customer_id_or_waiting_email(context, update, access_keeper, chat_id)
     if condition:

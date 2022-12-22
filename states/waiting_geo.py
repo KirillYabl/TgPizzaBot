@@ -11,8 +11,6 @@ from not_only_one_state_functions import get_address_entry_lat_lon
 from not_only_one_state_functions import get_customer_id_or_waiting_email
 from not_only_one_state_functions import get_delivery_price
 from not_only_one_state_functions import fetch_coordinates
-from singletons.access_keeper import access_keeper
-from singletons.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +20,8 @@ def waiting_geo(update: Update, context: CallbackContext) -> str:
     logger.debug('processing user geo...')
     bot = context.bot
     chat_id = update.effective_chat.id
+    config = context.bot_data['config']
+    access_keeper = context.bot_data['access_keeper']
 
     if update.message and update.message.location:
         logger.debug('user send location by telegram')

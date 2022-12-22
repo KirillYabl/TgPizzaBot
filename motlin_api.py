@@ -189,6 +189,7 @@ def get_cart_items_info(access_keeper, reference):
     logger.debug('cart items were got')
 
     items_in_cart = response.json()['data']
+    response_meta = response.json()['meta']
 
     logger.debug(f'{len(items_in_cart)} items in cart')
 
@@ -206,8 +207,8 @@ def get_cart_items_info(access_keeper, reference):
         items_in_cart_for_response['products'].append(item_in_cart)
         logger.debug(f'item {item["id"]} was handled')
 
-    total_price = response['meta']['display_price']['with_tax']['formatted']
-    total_price_amount = response['meta']['display_price']['with_tax']['amount']
+    total_price = response_meta['display_price']['with_tax']['formatted']
+    total_price_amount = response_meta['display_price']['with_tax']['amount']
     items_in_cart_for_response['total_price'] = total_price
     items_in_cart_for_response['total_price_amount'] = total_price_amount
 

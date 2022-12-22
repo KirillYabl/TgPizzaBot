@@ -6,7 +6,6 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import motlin_api
 from not_only_one_state_functions import send_cart_info
-from singletons.access_keeper import access_keeper
 from states.start import start
 
 logger = logging.getLogger(__name__)
@@ -33,9 +32,9 @@ def handle_menu(update: Update, context: CallbackContext) -> str:
     logger.debug('returning description of product')
 
     product_id = query.data
-    product = motlin_api.get_product_by_id(access_keeper, product_id)
+    product = motlin_api.get_product_by_id(context.bot_data['access_keeper'], product_id)
     image_id = product['relationships']['main_image']['data']['id']
-    image_href = motlin_api.get_file_href_by_id(access_keeper, image_id)
+    image_href = motlin_api.get_file_href_by_id(context.bot_data['access_keeper'], image_id)
 
     msg = f"""
     {product['name']}

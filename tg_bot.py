@@ -1,13 +1,18 @@
+import environs
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 
-from telegram.ext import Updater, Filters, PreCheckoutQueryHandler
-from telegram.ext import CommandHandler, CallbackQueryHandler, MessageHandler
+from redis import Redis
+from telegram.ext import Updater
+from telegram.ext import Filters
+from telegram.ext import PreCheckoutQueryHandler
+from telegram.ext import CommandHandler
+from telegram.ext import CallbackQueryHandler
+from telegram.ext import MessageHandler
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 
-from singletons.config import config
-from singletons.redis_connection import redis_connection
+from motlin_api import Access
 from states.handle_cart import handle_cart
 from states.handle_description import handle_description
 from states.handle_menu import handle_menu
@@ -17,6 +22,9 @@ from states.waiting_email import waiting_email
 from states.waiting_geo import waiting_geo
 
 logger = logging.getLogger(__name__)
+
+env = environs.Env()
+env.read_env()
 
 
 def successful_payment_callback(update: Update, context: CallbackContext) -> None:
@@ -43,6 +51,24 @@ def precheckout_callback(update: Update, context: CallbackContext) -> Optional[s
 
 def handle_users_reply(update: Update, context: CallbackContext) -> None:
     """Bot's state machine."""
+
+    # can't use telegram Persistence classes because they don't support classes
+    if 'config' not in context.bot_data:
+        context.bot_data['config'] = get_config()
+        access_keeper = get_motlin_access_keeper(
+            context.bot_data['config']['motlin_client_id'],
+            context.bot_data['config']['motlin_client_secret']
+        )
+
+        db = get_database_connection(
+            context.bot_data['config']['redis_db_address'],
+            context.bot_data['config']['redis_db_port'],
+            context.bot_data['config']['redis_db_password']
+        )
+
+        context.bot_data['access_keeper'] = access_keeper
+        context.bot_data['db'] = db
+
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -54,9 +80,9 @@ def handle_users_reply(update: Update, context: CallbackContext) -> None:
 
     if user_reply == '/start':
         user_state = 'START'
-        redis_connection.set(chat_id, user_state)
+        context.bot_data['db'].set(chat_id, user_state)
     else:
-        user_state = redis_connection.get(chat_id).decode("utf-8")
+        user_state = context.bot_data['db'].get(chat_id).decode("utf-8")
 
     logger.debug(f'User state: {user_state}')
 
@@ -71,7 +97,7 @@ def handle_users_reply(update: Update, context: CallbackContext) -> None:
     }
     state_handler = states_functions[user_state]
     next_state = state_handler(update, context)
-    redis_connection.set(chat_id, next_state)
+    context.bot_data['db'].set(chat_id, next_state)
 
 
 def error(update: Update, context: CallbackContext) -> None:
@@ -79,14 +105,66 @@ def error(update: Update, context: CallbackContext) -> None:
     logger.warning(f'Update "{update}" caused error "{context.error}"')
 
 
+def get_config() -> Dict[str, Any]:
+    """Get config."""
+    config = {
+        'tg_bot_token': env.str('TG_BOT_TOKEN'),
+        'proxy': env.str('PROXY', None),
+        'motlin_client_id': env.str("MOTLIN_CLIENT_ID"),
+        'motlin_client_secret': env.str("MOTLIN_CLIENT_SECRET", None),
+        'redis_db_password': env.str("REDIS_DB_PASSWORD"),
+        'redis_db_address': env.str("REDIS_DB_ADDRESS"),
+        'redis_db_port': env.int("REDIS_DB_PORT"),
+        'products_on_page': env.int("PRODUCTS_ON_PAGE", 8),
+        'yandex_geo_apikey': env.str("YANDEX_GEO_APIKEY"),
+        'pizzeria_addresses_flow_slug': env.str("PIZZERIA_ADDRESSES_FLOW_SLUG", "pizzeria-addresses"),
+        'customer_addresses_flow_slug': env.str("CUSTOMER_ADDRESSES_FLOW_SLUG", "customer-addresses"),
+        'customer_addresses_customer_id_slug': env.str("CUSTOMER_ADDRESSES_CUSTOMER_ID_SLUG",
+                                                       "customer-addresses-customer-id"),
+        'customer_addresses_longitude_slug': env.str("CUSTOMER_ADDRESSES_LONGITUDE_SLUG",
+                                                     "customer-addresses-longitude"),
+        'customer_addresses_latitude_slug': env.str("CUSTOMER_ADDRESSES_LATITUDE_SLUG",
+                                                    "customer-addresses-latitude"),
+        'pizzeria_addresses_deliveryman_telegram_chat_id': env.str("PIZZERIA_ADDRESSES_DELIVERYMAN_TELEGRAM_CHAT_ID",
+                                                                   "pizzeria-addresses-deliveryman-telegram-chat-id"),
+        'pizzeria_addresses_address': env.str("PIZZERIA_ADDRESSES_ADDRESS", "pizzeria-addresses-address"),
+        'bank_token': env.str("BANK_TOKEN")
+    }
+
+    logger.debug('.env was read, config was constructed')
+
+    return config
+
+
+def get_motlin_access_keeper(client_id: str, client_secret: Optional[str]) -> Access:
+    """Get object which keep motlin API access."""
+    access_keeper = Access(client_id, client_secret)
+
+    logger.debug('access_keeper was got')
+    return access_keeper
+
+
+def get_database_connection(host, port, password) -> Redis:
+    """Returns a connection to Redis DB."""
+    database = Redis(host=host, port=port, password=password)
+    logger.debug('connection with Redis DB was established')
+    return database
+
+
 def main():
     logging.basicConfig(format='%(asctime)s  %(name)s  %(levelname)s  %(message)s', level=logging.DEBUG)
+
+    config = get_config()
 
     request_kwargs = None
     if config['proxy']:
         request_kwargs = {'proxy_url': config['proxy']}
         logger.debug(f'Using proxy - {config["proxy"]}')
-    updater = Updater(token=config['tg_bot_token'], use_context=True, request_kwargs=request_kwargs)
+    updater = Updater(
+        token=config['tg_bot_token'],
+        use_context=True,
+        request_kwargs=request_kwargs,
+    )
     logger.debug('Connection with TG was established')
 
     updater.dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
