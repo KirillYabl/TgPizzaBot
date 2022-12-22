@@ -49,10 +49,10 @@ class Access:
         response = requests.post('https://api.moltin.com/oauth/access_token', data=data)
         response.raise_for_status()
 
-        response = response.json()
+        access = response.json()
 
-        self.access_token = response['access_token']
-        self.expires = response['expires']
+        self.access_token = access['access_token']
+        self.expires = access['expires']
 
         logger.debug('motlin access token was updated')
 
@@ -188,8 +188,7 @@ def get_cart_items_info(access_keeper, reference):
     response.raise_for_status()
     logger.debug('cart items were got')
 
-    response = response.json()
-    items_in_cart = response['data']
+    items_in_cart = response.json()['data']
 
     logger.debug(f'{len(items_in_cart)} items in cart')
 
