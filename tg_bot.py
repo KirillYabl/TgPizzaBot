@@ -116,21 +116,6 @@ def get_config() -> Dict[str, Any]:
     return config
 
 
-def get_motlin_access_keeper(client_id: str, client_secret: Optional[str]) -> Access:
-    """Get object which keep motlin API access."""
-    access_keeper = Access(client_id, client_secret)
-
-    logger.debug('access_keeper was got')
-    return access_keeper
-
-
-def get_database_connection(host, port, password) -> Redis:
-    """Returns a connection to Redis DB."""
-    database = Redis(host=host, port=port, password=password)
-    logger.debug('connection with Redis DB was established')
-    return database
-
-
 def main():
     logging.basicConfig(format='%(asctime)s  %(name)s  %(levelname)s  %(message)s', level=logging.DEBUG)
 
@@ -155,16 +140,14 @@ def main():
     updater.dispatcher.add_error_handler(error)
 
     # can't use telegram Persistence classes because they don't support classes
-    updater.dispatcher.bot_data['config'] = get_config()
-    access_keeper = get_motlin_access_keeper(
-        updater.dispatcher.bot_data['config']['motlin_client_id'],
-        updater.dispatcher.bot_data['config']['motlin_client_secret']
-    )
+    config = get_config()
+    updater.dispatcher.bot_data['config'] = config
+    access_keeper = Access(config['motlin_client_id'], config['motlin_client_secret'])
 
-    db = get_database_connection(
-        updater.dispatcher.bot_data['config']['redis_db_address'],
-        updater.dispatcher.bot_data['config']['redis_db_port'],
-        updater.dispatcher.bot_data['config']['redis_db_password']
+    db = Redis(
+        host=config['redis_db_address'],
+        port=config['redis_db_port'],
+        password=config['redis_db_password']
     )
 
     updater.dispatcher.bot_data['access_keeper'] = access_keeper
