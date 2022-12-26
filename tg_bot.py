@@ -49,23 +49,6 @@ def precheckout_callback(update: Update, context: CallbackContext) -> Optional[s
 def handle_users_reply(update: Update, context: CallbackContext) -> None:
     """Bot's state machine."""
 
-    # can't use telegram Persistence classes because they don't support classes
-    if 'config' not in context.bot_data:
-        context.bot_data['config'] = get_config()
-        access_keeper = get_motlin_access_keeper(
-            context.bot_data['config']['motlin_client_id'],
-            context.bot_data['config']['motlin_client_secret']
-        )
-
-        db = get_database_connection(
-            context.bot_data['config']['redis_db_address'],
-            context.bot_data['config']['redis_db_port'],
-            context.bot_data['config']['redis_db_password']
-        )
-
-        context.bot_data['access_keeper'] = access_keeper
-        context.bot_data['db'] = db
-
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -170,6 +153,22 @@ def main():
     updater.dispatcher.add_handler(MessageHandler(Filters.successful_payment, successful_payment_callback))
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_error_handler(error)
+
+    # can't use telegram Persistence classes because they don't support classes
+    updater.dispatcher.bot_data['config'] = get_config()
+    access_keeper = get_motlin_access_keeper(
+        updater.dispatcher.bot_data['config']['motlin_client_id'],
+        updater.dispatcher.bot_data['config']['motlin_client_secret']
+    )
+
+    db = get_database_connection(
+        updater.dispatcher.bot_data['config']['redis_db_address'],
+        updater.dispatcher.bot_data['config']['redis_db_port'],
+        updater.dispatcher.bot_data['config']['redis_db_password']
+    )
+
+    updater.dispatcher.bot_data['access_keeper'] = access_keeper
+    updater.dispatcher.bot_data['db'] = db
 
     updater.start_polling()
 
