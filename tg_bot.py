@@ -23,9 +23,6 @@ from states.waiting_geo import waiting_geo
 
 logger = logging.getLogger(__name__)
 
-env = environs.Env()
-env.read_env()
-
 
 def successful_payment_callback(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Thank you for your payment!")
@@ -182,4 +179,6 @@ def main():
 
 
 if __name__ == '__main__':
+    env = environs.Env()
+    env.read_env()
     main()
