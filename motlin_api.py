@@ -75,21 +75,51 @@ def get_authorization_headers(access_keeper):
     return headers
 
 
-def get_all_products(access_keeper):
+def get_products(access_keeper, category_id=None):
     """Get list of products
     :param access_keeper: object, Access class instance
+    :param category_id: str, id of category for filtering
     :return: list of dicts, list of products where product is dict
     """
     logger.debug('getting products...')
     headers = get_authorization_headers(access_keeper)
 
-    response = requests.get('https://api.moltin.com/v2/products', headers=headers)
+    get_kwargs = {
+        'url': 'https://api.moltin.com/v2/products',
+        'headers': headers
+    }
+
+    if category_id:
+        logger.debug(f'filtering by category={category_id}')
+        params = {
+            'filter': f'eq(category.id,{category_id})'
+        }
+        get_kwargs['params'] = params
+
+    response = requests.get(**get_kwargs)
     response.raise_for_status()
 
     products = response.json()['data']
     logger.debug(f'{len(products)} products was got')
 
     return products
+
+
+def get_all_categories(access_keeper):
+    """Get list of categories
+    :param access_keeper: object, Access class instance
+    :return: list of dicts, list of categories where category is dict
+    """
+    logger.debug('getting categories...')
+    headers = get_authorization_headers(access_keeper)
+
+    response = requests.get('https://api.moltin.com/v2/categories', headers=headers)
+    response.raise_for_status()
+
+    categories = response.json()['data']
+    logger.debug(f'{len(categories)} categories was got')
+
+    return categories
 
 
 def get_product_by_id(access_keeper, product_id):

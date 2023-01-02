@@ -30,11 +30,12 @@ def webhook():
     """
     logger.debug('webhook...')
     data = request.get_json()
-    pizzas = motlin_api.get_all_products(access_keeper)[:6]
+    max_products_on_page = 10
+    pizzas = motlin_api.get_products(access_keeper, env.str('MAIN_CATEGORY_ID', None))[:max_products_on_page]
     elements = [
         {
             'title': 'Меню',
-            'description': 'Добавьте пиццы в корзину и сделайте заказ',
+            'subtitle': 'Добавьте пиццы в корзину и сделайте заказ',
             'image_url': env.str('PIZZA_LOGO_URL'),
             'buttons': [
                 {
