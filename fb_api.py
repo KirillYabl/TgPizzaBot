@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Any
 
 import requests
 
@@ -25,8 +26,8 @@ def send_message(token: str, recipient_id: str, message_text: str) -> None:
     logger.debug('message sent')
 
 
-def send_buttons(token: str, recipient_id: str, buttons: list[dict[str, str]]) -> None:
-    """Send buttons"""
+def send_carousel_buttons(token: str, recipient_id: str, elements: list[dict[str, Any]]) -> None:
+    """Send carousel buttons"""
     logger.debug('sending buttons...')
     params = {"access_token": token}
     headers = {'Content-Type': 'application/json'}
@@ -39,9 +40,8 @@ def send_buttons(token: str, recipient_id: str, buttons: list[dict[str, str]]) -
             'attachment': {
                 'type': 'template',
                 'payload': {
-                    'template_type': 'button',
-                    'text': 'Try the postback button!',
-                    'buttons': buttons,
+                    'template_type': 'generic',
+                    'elements': elements,
                 },
             },
         },

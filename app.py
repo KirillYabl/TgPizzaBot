@@ -1,12 +1,10 @@
 import logging
-import os
-import json
 
 import environs
-import requests
 from flask import Flask, request
 
 import fb_api
+import motlin_api
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
@@ -32,12 +30,18 @@ def webhook():
     """
     logger.debug('webhook...')
     data = request.get_json()
-    buttons = [
+    pizzas = motlin_api.get_all_products(access_keeper)[:6]
+    elements = [
         {
-            'type': 'postback',
-            'title': 'new button',
-            'payload': 'START',
+            'title': f'{pizza["name"]} (product["meta"]["display_price"]["with_tax"]["formatted"])',
+            'subtitle': pizza['description'],
+            'buttons': {
+                'type': 'postback',
+                'title': 'Добавить в корзину',
+                'payload': f'ADD_TO_CART:{pizza["id"]}'
+            }
         }
+        for pizza in pizzas
     ]
     if data["object"] == "page":
         for entry in data["entry"]:
@@ -48,7 +52,7 @@ def webhook():
                         "id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
                     logger.debug(f'sending message(sender={sender_id};recipient={recipient_id};text={message_text})...')
-                    fb_api.send_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, buttons)
+                    fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
                     logger.debug('message sended')
     return "ok", 200
 
@@ -57,4 +61,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     env = environs.Env()
     env.read_env()
+    access_keeper = motlin_api.Access(env.str('MOTLIN_CLIENT_ID'), env.str('MOTLIN_CLIENT_SECRET'))
     app.run(debug=True)
