@@ -33,13 +33,13 @@ def webhook():
     pizzas = motlin_api.get_all_products(access_keeper)[:6]
     elements = [
         {
-            'title': f'{pizza["name"]} (product["meta"]["display_price"]["with_tax"]["formatted"])',
+            'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
             'subtitle': pizza['description'],
-            'buttons': {
+            'buttons': [{
                 'type': 'postback',
                 'title': 'Добавить в корзину',
                 'payload': f'ADD_TO_CART:{pizza["id"]}'
-            }
+            }]
         }
         for pizza in pizzas
     ]
