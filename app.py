@@ -35,6 +35,10 @@ def webhook():
         {
             'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
             'subtitle': pizza['description'],
+            'image_url': motlin_api.get_file_href_by_id(
+                access_keeper,
+                pizza['relationships']['main_image']['data']['id']
+            ),
             'buttons': [{
                 'type': 'postback',
                 'title': 'Добавить в корзину',
