@@ -33,6 +33,25 @@ def webhook():
     pizzas = motlin_api.get_all_products(access_keeper)[:6]
     elements = [
         {
+            'title': 'Меню',
+            'description': 'Добавьте пиццы в корзину и сделайте заказ',
+            'image_url': env.str('PIZZA_LOGO_URL'),
+            'buttons': [
+                {
+                    'type': 'postback',
+                    'title': 'Корзина',
+                    'payload': 'CART'
+                },
+                {
+                    'type': 'postback',
+                    'title': 'Сделать заказ',
+                    'payload': 'ORDER'
+                }
+            ]
+        }
+    ]
+    elements += [
+        {
             'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
             'subtitle': pizza['description'],
             'image_url': motlin_api.get_file_href_by_id(
