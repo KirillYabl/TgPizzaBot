@@ -31,42 +31,60 @@ def webhook():
     logger.debug('webhook...')
     data = request.get_json()
     max_products_on_page = 10
-    pizzas = motlin_api.get_products(access_keeper, env.str('MAIN_CATEGORY_ID', None))[:max_products_on_page]
-    elements = [
-        {
-            'title': 'Меню',
-            'subtitle': 'Добавьте пиццы в корзину и сделайте заказ',
-            'image_url': env.str('PIZZA_LOGO_URL'),
-            'buttons': [
-                {
+    max_buttons_for_element = 3
+    main_category_id = env.str('MAIN_CATEGORY_ID', None)
+    pizzas = motlin_api.get_products(access_keeper, main_category_id)[:max_products_on_page - 1]
+    categories = motlin_api.get_all_categories(access_keeper)
+    elements = \
+        [
+            {
+                'title': 'Меню',
+                'subtitle': 'Добавьте пиццы в корзину и сделайте заказ',
+                'image_url': env.str('PIZZA_LOGO_URL'),
+                'buttons': [
+                    {
+                        'type': 'postback',
+                        'title': 'Корзина',
+                        'payload': 'CART'
+                    },
+                    {
+                        'type': 'postback',
+                        'title': 'Сделать заказ',
+                        'payload': 'ORDER'
+                    }
+                ]
+            }
+        ] + [
+            {
+                'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
+                'subtitle': pizza['description'],
+                'image_url': motlin_api.get_file_href_by_id(
+                    access_keeper,
+                    pizza['relationships']['main_image']['data']['id']
+                ),
+                'buttons': [{
                     'type': 'postback',
-                    'title': 'Корзина',
-                    'payload': 'CART'
-                },
-                {
-                    'type': 'postback',
-                    'title': 'Сделать заказ',
-                    'payload': 'ORDER'
-                }
-            ]
-        }
-    ]
-    elements += [
-        {
-            'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
-            'subtitle': pizza['description'],
-            'image_url': motlin_api.get_file_href_by_id(
-                access_keeper,
-                pizza['relationships']['main_image']['data']['id']
-            ),
-            'buttons': [{
-                'type': 'postback',
-                'title': 'Добавить в корзину',
-                'payload': f'ADD_TO_CART:{pizza["id"]}'
-            }]
-        }
-        for pizza in pizzas
-    ]
+                    'title': 'Добавить в корзину',
+                    'payload': f'ADD_TO_CART:{pizza["id"]}'
+                }]
+            }
+            for pizza in pizzas
+        ] + [
+            {
+                'title': 'Не нашли нужную пиццу?',
+                'subtitle': 'Остальные пиццы можно посмотреть в одной из категорий',
+                'image_url': env.str('PIZZA_CATEGORIES_URL'),
+                'buttons': [
+                               {
+                                   'type': 'postback',
+                                   'title': other_category['name'],
+                                   'payload': f'CATEGORY_ID:{other_category["id"]}'
+                               }
+                               for other_category
+                               in [category for category in categories if category['id'] != main_category_id]
+                           ][:max_buttons_for_element - 1]
+            }
+        ]
     if data["object"] == "page":
         for entry in data["entry"]:
             for messaging_event in entry["messaging"]:
