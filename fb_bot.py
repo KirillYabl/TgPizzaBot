@@ -2,6 +2,7 @@ import logging
 
 import environs
 from flask import Flask, request
+from redis import Redis
 
 import fb_api
 import motlin_api
@@ -23,17 +24,12 @@ def verify():
     return "Hello world", 200
 
 
-@app.route('/', methods=['POST'])
-def webhook():
-    """
-    Основной вебхук, на который будут приходить сообщения от Facebook.
-    """
-    logger.debug('webhook...')
-    data = request.get_json()
+def handle_start(sender_id, message_text):
     max_products_on_page = 10
+    extra_elements = 2  # manage element and categories element
     max_buttons_for_element = 3
     main_category_id = env.str('MAIN_CATEGORY_ID', None)
-    pizzas = motlin_api.get_products(access_keeper, main_category_id)[:max_products_on_page - 1]
+    pizzas = motlin_api.get_products(access_keeper, main_category_id)[:max_products_on_page - extra_elements]
     categories = motlin_api.get_all_categories(access_keeper)
     elements = \
         [
@@ -85,6 +81,34 @@ def webhook():
                            ][:max_buttons_for_element - 1]
             }
         ]
+    fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
+    return "START"
+
+
+def handle_users_reply(sender_id, message_text):
+    states_functions = {
+        'START': handle_start,
+    }
+    recorded_state = DATABASE.get(f'facebookid_{sender_id}')
+    if not recorded_state or recorded_state.decode("utf-8") not in states_functions.keys():
+        user_state = "START"
+    else:
+        user_state = recorded_state.decode("utf-8")
+    if message_text == "/start":
+        user_state = "START"
+    state_handler = states_functions[user_state]
+    next_state = state_handler(sender_id, message_text)
+    DATABASE.set(f'facebookid_{sender_id}', next_state)
+
+
+@app.route('/', methods=['POST'])
+def webhook():
+    """
+    Основной вебхук, на который будут приходить сообщения от Facebook.
+    """
+    logger.debug('webhook...')
+    data = request.get_json()
+
     if data["object"] == "page":
         for entry in data["entry"]:
             for messaging_event in entry["messaging"]:
@@ -93,9 +117,7 @@ def webhook():
                     recipient_id = messaging_event["recipient"][
                         "id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
-                    logger.debug(f'sending message(sender={sender_id};recipient={recipient_id};text={message_text})...')
-                    fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
-                    logger.debug('message sended')
+                    handle_users_reply(sender_id, message_text)
     return "ok", 200
 
 
@@ -104,4 +126,9 @@ if __name__ == '__main__':
     env = environs.Env()
     env.read_env()
     access_keeper = motlin_api.Access(env.str('MOTLIN_CLIENT_ID'), env.str('MOTLIN_CLIENT_SECRET'))
+    DATABASE = Redis(
+        host=env.str('REDIS_DB_ADDRESS'),
+        port=env.int('REDIS_DB_PORT'),
+        password=env.str('REDIS_DB_PASSWORD')
+    )
     app.run(debug=True)

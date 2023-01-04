@@ -90,7 +90,7 @@ Add to your ap webhook and facebook messenger products
 
 Left or add settings from telegram.
 You need this keys from telegram part env:
-`MOTLIN_CLIENT_ID`, `MOTLIN_CLIENT_SECRET`
+`MOTLIN_CLIENT_ID`, `MOTLIN_CLIENT_SECRET`, `REDIS_DB_ADDRESS`, `REDIS_DB_PORT`, `REDIS_DB_PASSWORD`
 
 `FB_VERIFY_TOKEN` - token of your webhook app in facebook
 `FB_PAGE_ACCESS_TOKEN` - token of your bot page in facebook
