@@ -1,3 +1,4 @@
+import enum
 import logging
 
 import environs
@@ -9,6 +10,11 @@ import motlin_api
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
+
+
+class EventType(enum.Enum):
+    MESSAGE = 'MESSAGE'
+    POSTBACK = 'POSTBACK'
 
 
 @app.route('/', methods=['GET'])
@@ -24,12 +30,16 @@ def verify():
     return "Hello world", 200
 
 
-def handle_start(sender_id, message_text):
+def handle_start(sender_id: str, message_text: str, event_type: EventType) -> str:
     max_products_on_page = 10
     extra_elements = 2  # manage element and categories element
     max_buttons_for_element = 3
-    main_category_id = env.str('MAIN_CATEGORY_ID', None)
-    pizzas = motlin_api.get_products(access_keeper, main_category_id)[:max_products_on_page - extra_elements]
+    if event_type == EventType.MESSAGE:
+        category_id = env.str('MAIN_CATEGORY_ID', None)
+    elif event_type == EventType.POSTBACK:
+        if message_text.startswith('CATEGORY_ID:'):
+            category_id = message_text.split('CATEGORY_ID:')[1]
+    pizzas = motlin_api.get_products(access_keeper, category_id)[:max_products_on_page - extra_elements]
     categories = motlin_api.get_all_categories(access_keeper)
     elements = \
         [
@@ -77,7 +87,7 @@ def handle_start(sender_id, message_text):
                                    'payload': f'CATEGORY_ID:{other_category["id"]}'
                                }
                                for other_category
-                               in [category for category in categories if category['id'] != main_category_id]
+                               in [category for category in categories if category['id'] != category_id]
                            ][:max_buttons_for_element - 1]
             }
         ]
@@ -85,7 +95,7 @@ def handle_start(sender_id, message_text):
     return "START"
 
 
-def handle_users_reply(sender_id, message_text):
+def handle_users_reply(sender_id: str, message_text: str, event_type: EventType) -> None:
     states_functions = {
         'START': handle_start,
     }
@@ -97,7 +107,7 @@ def handle_users_reply(sender_id, message_text):
     if message_text == "/start":
         user_state = "START"
     state_handler = states_functions[user_state]
-    next_state = state_handler(sender_id, message_text)
+    next_state = state_handler(sender_id, message_text, event_type)
     DATABASE.set(f'facebookid_{sender_id}', next_state)
 
 
@@ -117,7 +127,13 @@ def webhook():
                     recipient_id = messaging_event["recipient"][
                         "id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
-                    handle_users_reply(sender_id, message_text)
+                    handle_users_reply(sender_id, message_text, EventType.MESSAGE)
+                elif messaging_event.get("postback"):  # someone sent us a message
+                    sender_id = messaging_event["sender"]["id"]  # the facebook ID of the person sending you the message
+                    recipient_id = messaging_event["recipient"][
+                        "id"]  # the recipient's ID, which should be your page's facebook ID
+                    payload = messaging_event["postback"]["payload"]  # the message's text
+                    handle_users_reply(sender_id, payload, EventType.POSTBACK)
     return "ok", 200
 
 
