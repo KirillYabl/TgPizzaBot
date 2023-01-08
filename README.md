@@ -96,6 +96,7 @@ You need this keys from telegram part env:
 `FB_PAGE_ACCESS_TOKEN` - token of your bot page in facebook
 `PIZZA_LOGO_URL` - url with your shop image
 `MAIN_CATEGORY_ID` - main pizza category id in motlin (because you can't shaw all, only 10)
+`CART_IMAGE_URL` - url with your cart image
 
 Get domain with https and run bot on this domain
 ```

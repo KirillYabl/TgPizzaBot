@@ -129,18 +129,21 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
                 'subtitle': item['description'],
                 'image_url': motlin_api.get_file_href_by_id(
                     access_keeper,
-                    item['relationships']['main_image']['data']['id']
+                    motlin_api.get_product_by_id(
+                        access_keeper,
+                        item["product_id"]
+                    )['relationships']['main_image']['data']['id']
                 ),
                 'buttons': [
                     {
                         'type': 'postback',
                         'title': 'Добавить еще одну',
-                        'payload': f'ADD_TO_CART:{item["id"]}'
+                        'payload': f'ADD_TO_CART:{item["product_id"]}'
                     },
                     {
                         'type': 'postback',
                         'title': 'Убрать из корзины',
-                        'payload': f'REMOVE_FROM_CART:{item["id"]}'
+                        'payload': f'REMOVE_FROM_CART:{item["cart_item_id"]}'
                     }
                 ]
             }
