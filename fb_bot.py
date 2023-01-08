@@ -1,5 +1,6 @@
 import enum
 import logging
+from typing import Any
 
 import environs
 from flask import Flask, request
@@ -92,12 +93,81 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
             }
         ]
     fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
-    return "START"
+    return 'MENU'
+
+
+def construct_cart(sender_id: str) -> list[dict[str, Any]]:
+    cart_items_info = motlin_api.get_cart_items_info(access_keeper, sender_id)
+    total_price = cart_items_info['total_price']
+    cart_elements = \
+        [
+            {
+                'title': 'Корзина',
+                'subtitle': f'Ваш заказ на сумму {total_price}',
+                'image_url': env.str('CART_IMAGE_URL'),
+                'buttons': [
+                    {
+                        'type': 'postback',
+                        'title': 'Самовывоз',
+                        'payload': 'PICKUP'
+                    },
+                    {
+                        'type': 'postback',
+                        'title': 'Доставка',
+                        'payload': 'DELIVERY'
+                    },
+                    {
+                        'type': 'postback',
+                        'title': 'К меню',
+                        'payload': 'MENU'
+                    }
+                ]
+            }
+        ] + [
+            {
+                'title': f'{item["name"]} ({item["quantity"]} шт.)',
+                'subtitle': item['description'],
+                'image_url': motlin_api.get_file_href_by_id(
+                    access_keeper,
+                    item['relationships']['main_image']['data']['id']
+                ),
+                'buttons': [
+                    {
+                        'type': 'postback',
+                        'title': 'Добавить еще одну',
+                        'payload': f'ADD_TO_CART:{item["id"]}'
+                    },
+                    {
+                        'type': 'postback',
+                        'title': 'Убрать из корзины',
+                        'payload': f'REMOVE_FROM_CART:{item["id"]}'
+                    }
+                ]
+            }
+            for item in cart_items_info['products']
+        ]
+    return cart_elements
+
+
+def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str:
+    if event_type == EventType.MESSAGE:
+        return 'MENU'
+    elif event_type == EventType.POSTBACK:
+        if message_text.startswith('ADD_TO_CART:'):
+            product_id = message_text.split('ADD_TO_CART:')[1]
+            quantity = 1
+            motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
+            elements = construct_cart(sender_id)
+        elif message_text == 'CART':
+            elements = construct_cart(sender_id)
+        fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
+    return 'MENU'
 
 
 def handle_users_reply(sender_id: str, message_text: str, event_type: EventType) -> None:
     states_functions = {
         'START': handle_start,
+        'MENU': handle_menu,
     }
     recorded_state = DATABASE.get(f'facebookid_{sender_id}')
     if not recorded_state or recorded_state.decode("utf-8") not in states_functions.keys():
