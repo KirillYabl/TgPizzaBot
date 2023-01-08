@@ -163,6 +163,10 @@ def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str
             elements = construct_cart(sender_id)
         elif message_text == 'CART':
             elements = construct_cart(sender_id)
+        elif message_text.startswith('REMOVE_FROM_CART:'):
+            cart_item_id = message_text.split('REMOVE_FROM_CART:')[1]
+            motlin_api.delete_cart_item(access_keeper, sender_id, cart_item_id)
+            elements = construct_cart(sender_id)
         fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
     return 'MENU'
 
