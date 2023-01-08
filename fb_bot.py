@@ -140,7 +140,7 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
                     {
                         'type': 'postback',
                         'title': 'Добавить еще одну',
-                        'payload': f'ADD_TO_CART:{item["product_id"]}'
+                        'payload': f'ADD_TO_CART_ONE_MORE:{item["product_id"]}'
                     },
                     {
                         'type': 'postback',
@@ -160,6 +160,11 @@ def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str
     elif event_type == EventType.POSTBACK:
         if message_text.startswith('ADD_TO_CART:'):
             product_id = message_text.split('ADD_TO_CART:')[1]
+            quantity = 1
+            motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
+            return 'START'
+        elif message_text.startswith('ADD_TO_CART_ONE_MORE:'):
+            product_id = message_text.split('ADD_TO_CART_ONE_MORE:')[1]
             quantity = 1
             motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
             elements = construct_cart(sender_id)
