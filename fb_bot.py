@@ -40,6 +40,8 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
     elif event_type == EventType.POSTBACK:
         if message_text.startswith('CATEGORY_ID:'):
             category_id = message_text.split('CATEGORY_ID:')[1]
+        else:
+            category_id = env.str('MAIN_CATEGORY_ID', None)
     pizzas = motlin_api.get_products(access_keeper, category_id)[:max_products_on_page - extra_elements]
     categories = motlin_api.get_all_categories(access_keeper)
     elements = \
