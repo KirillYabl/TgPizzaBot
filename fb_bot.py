@@ -96,6 +96,7 @@ def get_menu_by_category(category_id, categories):
 
 
 def handle_start(sender_id: str, message_text: str, event_type: EventType) -> str:
+    logger.debug('start...')
     category_id = env.str('MAIN_CATEGORY_ID', None)
     if event_type == EventType.POSTBACK:
         if message_text.startswith('CATEGORY_ID:'):
@@ -106,12 +107,13 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
     elements = DATABASE.get(f'menu:{category_id}')
     if not elements:
         categories = motlin_api.get_all_categories(access_keeper)
-        elements = get_menu_by_category(category_id, categories)
+        elements, image_urls = get_menu_by_category(category_id, categories)
         DATABASE.set(f'menu:{category_id}', json.dumps(elements))
     else:
         elements = json.loads(elements.decode('utf-8'))
 
     fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
+    logger.debug('menu showed')
     return 'MENU'
 
 
@@ -178,22 +180,28 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
 
 
 def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str:
+    logger.debug('menu...')
     if event_type == EventType.MESSAGE:
+        logger.debug('get message')
         return 'MENU'
     elif event_type == EventType.POSTBACK:
         if message_text.startswith('ADD_TO_CART:'):
+            logger.debug('add to cart from start')
             product_id = message_text.split('ADD_TO_CART:')[1]
             quantity = 1
             motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
             return 'START'
         elif message_text.startswith('ADD_TO_CART_ONE_MORE:'):
+            logger.debug('add to cart from cart')
             product_id = message_text.split('ADD_TO_CART_ONE_MORE:')[1]
             quantity = 1
             motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
             elements = construct_cart(sender_id)
         elif message_text == 'CART':
+            logger.debug('show cart')
             elements = construct_cart(sender_id)
         elif message_text.startswith('REMOVE_FROM_CART:'):
+            logger.debug('remove from cart')
             cart_item_id = message_text.split('REMOVE_FROM_CART:')[1]
             motlin_api.delete_cart_item(access_keeper, sender_id, cart_item_id)
             elements = construct_cart(sender_id)
@@ -229,21 +237,25 @@ def webhook():
     data = request.get_json()
 
     if "object" in data and data["object"] == "page":  # facebook webhook
+        logger.debug('facebook')
         for entry in data["entry"]:
             for messaging_event in entry["messaging"]:
                 if messaging_event.get("message"):  # someone sent us a message
+                    logger.debug('get message')
                     sender_id = messaging_event["sender"]["id"]  # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"][
                         "id"]  # the recipient's ID, which should be your page's facebook ID
                     message_text = messaging_event["message"]["text"]  # the message's text
                     handle_users_reply(sender_id, message_text, EventType.MESSAGE)
                 elif messaging_event.get("postback"):  # someone sent us a message
+                    logger.debug('get postback')
                     sender_id = messaging_event["sender"]["id"]  # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"][
                         "id"]  # the recipient's ID, which should be your page's facebook ID
                     payload = messaging_event["postback"]["payload"]  # the message's text
                     handle_users_reply(sender_id, payload, EventType.POSTBACK)
-    elif data.get('configurations', {}).get('secret_key', '') == env.str('MOTLIN_CLIENT_SECRET'):  # motlin webhook
+    elif data.get('configuration', {}).get('secret_key', '') == env.str('MOTLIN_CLIENT_SECRET'):  # motlin webhook
+        logger.debug('motlin')
         categories = motlin_api.get_all_categories(access_keeper)
         images = {}
         for pizza_category in categories:
@@ -251,6 +263,7 @@ def webhook():
             images.update(image_urls)
             DATABASE.set(f'menu:{pizza_category["id"]}', json.dumps(elements))
         DATABASE.set('pizza_images', json.dumps(images))
+        logger.debug('cache updated')
     return "ok", 200
 
 
