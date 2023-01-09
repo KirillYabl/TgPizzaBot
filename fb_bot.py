@@ -1,4 +1,5 @@
 import enum
+import json
 import logging
 from typing import Any
 
@@ -31,19 +32,31 @@ def verify():
     return "Hello world", 200
 
 
-def handle_start(sender_id: str, message_text: str, event_type: EventType) -> str:
+def get_menu_by_category(category_id, categories):
     max_products_on_page = 10
     extra_elements = 2  # manage element and categories element
     max_buttons_for_element = 3
-    if event_type == EventType.MESSAGE:
-        category_id = env.str('MAIN_CATEGORY_ID', None)
-    elif event_type == EventType.POSTBACK:
-        if message_text.startswith('CATEGORY_ID:'):
-            category_id = message_text.split('CATEGORY_ID:')[1]
-        else:
-            category_id = env.str('MAIN_CATEGORY_ID', None)
     pizzas = motlin_api.get_products(access_keeper, category_id)[:max_products_on_page - extra_elements]
-    categories = motlin_api.get_all_categories(access_keeper)
+    pizzas_buttons = [
+        {
+            'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
+            'subtitle': pizza['description'],
+            'image_url': motlin_api.get_file_href_by_id(
+                access_keeper,
+                pizza['relationships']['main_image']['data']['id']
+            ),
+            'buttons': [{
+                'type': 'postback',
+                'title': 'Добавить в корзину',
+                'payload': f'ADD_TO_CART:{pizza["id"]}'
+            }]
+        }
+        for pizza in pizzas
+    ]
+    image_urls = {
+        pizza_button['buttons'][0]['payload'].split('ADD_TO_CART:')[-1]: pizza_button['image_url']
+        for pizza_button in pizzas_buttons
+    }
     elements = \
         [
             {
@@ -63,22 +76,7 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
                     }
                 ]
             }
-        ] + [
-            {
-                'title': f'{pizza["name"]} ({pizza["meta"]["display_price"]["with_tax"]["formatted"]})',
-                'subtitle': pizza['description'],
-                'image_url': motlin_api.get_file_href_by_id(
-                    access_keeper,
-                    pizza['relationships']['main_image']['data']['id']
-                ),
-                'buttons': [{
-                    'type': 'postback',
-                    'title': 'Добавить в корзину',
-                    'payload': f'ADD_TO_CART:{pizza["id"]}'
-                }]
-            }
-            for pizza in pizzas
-        ] + [
+        ] + pizzas_buttons + [
             {
                 'title': 'Не нашли нужную пиццу?',
                 'subtitle': 'Остальные пиццы можно посмотреть в одной из категорий',
@@ -94,12 +92,37 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
                            ][:max_buttons_for_element - 1]
             }
         ]
+    return elements, image_urls
+
+
+def handle_start(sender_id: str, message_text: str, event_type: EventType) -> str:
+    category_id = env.str('MAIN_CATEGORY_ID', None)
+    if event_type == EventType.POSTBACK:
+        if message_text.startswith('CATEGORY_ID:'):
+            category_id = message_text.split('CATEGORY_ID:')[1]
+        else:
+            category_id = env.str('MAIN_CATEGORY_ID', None)
+
+    elements = DATABASE.get(f'menu:{category_id}')
+    if not elements:
+        categories = motlin_api.get_all_categories(access_keeper)
+        elements = get_menu_by_category(category_id, categories)
+        DATABASE.set(f'menu:{category_id}', json.dumps(elements))
+    else:
+        elements = json.loads(elements.decode('utf-8'))
+
     fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
     return 'MENU'
 
 
 def construct_cart(sender_id: str) -> list[dict[str, Any]]:
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, sender_id)
+    images = DATABASE.get('pizza_images')
+    if images:
+        images = json.loads(images)
+    else:
+        images = {}
+
     total_price = cart_items_info['total_price']
     cart_elements = \
         [
@@ -129,7 +152,7 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
             {
                 'title': f'{item["name"]} ({item["quantity"]} шт.)',
                 'subtitle': item['description'],
-                'image_url': motlin_api.get_file_href_by_id(
+                'image_url': images.get(item["product_id"], None) or motlin_api.get_file_href_by_id(
                     access_keeper,
                     motlin_api.get_product_by_id(
                         access_keeper,
@@ -205,7 +228,7 @@ def webhook():
     logger.debug('webhook...')
     data = request.get_json()
 
-    if data["object"] == "page":
+    if "object" in data and data["object"] == "page":  # facebook webhook
         for entry in data["entry"]:
             for messaging_event in entry["messaging"]:
                 if messaging_event.get("message"):  # someone sent us a message
@@ -220,6 +243,14 @@ def webhook():
                         "id"]  # the recipient's ID, which should be your page's facebook ID
                     payload = messaging_event["postback"]["payload"]  # the message's text
                     handle_users_reply(sender_id, payload, EventType.POSTBACK)
+    elif data.get('configurations', {}).get('secret_key', '') == env.str('MOTLIN_CLIENT_SECRET'):  # motlin webhook
+        categories = motlin_api.get_all_categories(access_keeper)
+        images = {}
+        for pizza_category in categories:
+            elements, image_urls = get_menu_by_category(pizza_category['id'], categories)
+            images.update(image_urls)
+            DATABASE.set(f'menu:{pizza_category["id"]}', json.dumps(elements))
+        DATABASE.set('pizza_images', json.dumps(images))
     return "ok", 200
 
 

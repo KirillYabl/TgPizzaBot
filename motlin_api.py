@@ -150,6 +150,7 @@ def create_product(access_keeper, product):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.post('https://api.moltin.com/v2/products', headers=headers, json=product)
+    print(response.text)
     response.raise_for_status()
 
     new_product = response.json()['data']
@@ -452,3 +453,33 @@ def get_all_entries_of_flow(access_keeper, flow_slug):
     logger.debug(f'{len(entries)} entries was got')
 
     return entries
+
+
+def create_integration(access_keeper, webhook_url):
+    logger.debug('creating webhook integration...')
+    headers = get_authorization_headers(access_keeper)
+    headers['Content-Type'] = 'application/json'
+
+    integration = {
+        "data": {
+            "type": "integration",
+            "name": "Product notification",
+            "description": "Send notification about products manipulations.",
+            "enabled": True,
+            "observes": [
+                "product.created",
+                "product.updated",
+                "product.deleted",
+            ],
+            "integration_type": "webhook",
+            "configuration": {
+                "url": webhook_url,
+                "secret_key": access_keeper.client_secret
+            }
+        }
+    }
+
+    response = requests.post('https://api.moltin.com/v2/integrations', headers=headers, json=integration)
+    response.raise_for_status()
+
+    logger.debug('webhook integration created...')
