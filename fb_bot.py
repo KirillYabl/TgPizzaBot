@@ -181,16 +181,15 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
 
 def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str:
     logger.debug('menu...')
-    if event_type == EventType.MESSAGE:
-        logger.debug('get message')
-        return 'MENU'
-    elif event_type == EventType.POSTBACK:
+    if event_type == EventType.POSTBACK:
+        logger.debug('get postback')
         if message_text.startswith('ADD_TO_CART:'):
             logger.debug('add to cart from start')
             product_id = message_text.split('ADD_TO_CART:')[1]
             quantity = 1
             motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
-            return 'START'
+            condition = handle_start(sender_id, message_text, event_type)
+            return condition
         elif message_text.startswith('ADD_TO_CART_ONE_MORE:'):
             logger.debug('add to cart from cart')
             product_id = message_text.split('ADD_TO_CART_ONE_MORE:')[1]
@@ -206,7 +205,8 @@ def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str
             motlin_api.delete_cart_item(access_keeper, sender_id, cart_item_id)
             elements = construct_cart(sender_id)
         elif message_text == 'MENU':
-            return 'START'
+            condition = handle_start(sender_id, message_text, event_type)
+            return condition
         fb_api.send_carousel_buttons(env.str("FB_PAGE_ACCESS_TOKEN"), sender_id, elements)
     return 'MENU'
 
