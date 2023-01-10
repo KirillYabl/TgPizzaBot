@@ -145,7 +145,6 @@ def create_product(access_keeper, product):
     headers = get_authorization_headers(access_keeper)
 
     response = requests.post('https://api.moltin.com/v2/products', headers=headers, json=product)
-    print(response.text)
     response.raise_for_status()
 
     new_product = response.json()['data']
