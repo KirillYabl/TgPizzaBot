@@ -36,6 +36,7 @@ def get_menu_by_category(category_id, categories, pizza_logo_url, pizza_categori
     max_products_on_page = 10
     extra_elements = 2  # manage element and categories element
     max_buttons_for_element = 3
+    access_keeper = get_access_keeper()
     pizzas = motlin_api.get_products(access_keeper, category_id)[:max_products_on_page - extra_elements]
     pizzas_buttons = [
         {
@@ -97,6 +98,8 @@ def get_menu_by_category(category_id, categories, pizza_logo_url, pizza_categori
 
 def handle_start(sender_id: str, message_text: str, event_type: EventType) -> str:
     logger.debug('start...')
+    db = get_db_conn()
+    access_keeper = get_access_keeper()
     category_id = env.str('MAIN_CATEGORY_ID', None)
     if event_type == EventType.POSTBACK:
         if message_text.startswith('CATEGORY_ID:'):
@@ -104,11 +107,12 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
         else:
             category_id = env.str('MAIN_CATEGORY_ID', None)
 
-    elements = DATABASE.get(f'menu:{category_id}')
+    elements = db.get(f'menu:{category_id}')
     if not elements:
         categories = motlin_api.get_all_categories(access_keeper)
-        elements, image_urls = get_menu_by_category(category_id, categories, env.str('PIZZA_LOGO_URL'), env.str('PIZZA_CATEGORIES_URL'))
-        DATABASE.set(f'menu:{category_id}', json.dumps(elements))
+        elements, image_urls = get_menu_by_category(category_id, categories, env.str('PIZZA_LOGO_URL'),
+                                                    env.str('PIZZA_CATEGORIES_URL'))
+        db.set(f'menu:{category_id}', json.dumps(elements))
     else:
         elements = json.loads(elements.decode('utf-8'))
 
@@ -118,8 +122,10 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
 
 
 def construct_cart(sender_id: str, cart_image_url: str) -> list[dict[str, Any]]:
+    db = get_db_conn()
+    access_keeper = get_access_keeper()
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, sender_id)
-    images = DATABASE.get('pizza_images')
+    images = db.get('pizza_images')
     if images:
         images = json.loads(images)
     else:
@@ -181,6 +187,7 @@ def construct_cart(sender_id: str, cart_image_url: str) -> list[dict[str, Any]]:
 
 def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str:
     logger.debug('menu...')
+    access_keeper = get_access_keeper()
     if event_type == EventType.POSTBACK:
         logger.debug('get postback')
         if message_text.startswith('ADD_TO_CART:'):
@@ -216,7 +223,8 @@ def handle_users_reply(sender_id: str, message_text: str, event_type: EventType)
         'START': handle_start,
         'MENU': handle_menu,
     }
-    recorded_state = DATABASE.get(f'facebookid_{sender_id}')
+    db = get_db_conn()
+    recorded_state = db.get(f'facebookid_{sender_id}')
     if not recorded_state or recorded_state.decode("utf-8") not in states_functions.keys():
         user_state = "START"
     else:
@@ -225,7 +233,7 @@ def handle_users_reply(sender_id: str, message_text: str, event_type: EventType)
         user_state = "START"
     state_handler = states_functions[user_state]
     next_state = state_handler(sender_id, message_text, event_type)
-    DATABASE.set(f'facebookid_{sender_id}', next_state)
+    db.set(f'facebookid_{sender_id}', next_state)
 
 
 @app.route('/', methods=['POST'])
@@ -256,25 +264,40 @@ def webhook():
                     handle_users_reply(sender_id, payload, EventType.POSTBACK)
     elif data.get('configuration', {}).get('secret_key', '') == env.str('MOTLIN_CLIENT_SECRET'):  # motlin webhook
         logger.debug('motlin')
+        db = get_db_conn()
+        access_keeper = get_access_keeper()
         categories = motlin_api.get_all_categories(access_keeper)
         images = {}
         for pizza_category in categories:
-            elements, image_urls = get_menu_by_category(pizza_category['id'], categories, env.str('PIZZA_LOGO_URL'), env.str('PIZZA_CATEGORIES_URL'))
+            elements, image_urls = get_menu_by_category(pizza_category['id'], categories, env.str('PIZZA_LOGO_URL'),
+                                                        env.str('PIZZA_CATEGORIES_URL'))
             images.update(image_urls)
-            DATABASE.set(f'menu:{pizza_category["id"]}', json.dumps(elements))
-        DATABASE.set('pizza_images', json.dumps(images))
+            db.set(f'menu:{pizza_category["id"]}', json.dumps(elements))
+        db.set('pizza_images', json.dumps(images))
         logger.debug('cache updated')
     return "ok", 200
+
+
+def get_db_conn() -> Redis:
+    global db
+    if not db:
+        db = Redis(
+            host=env.str('REDIS_DB_ADDRESS'),
+            port=env.int('REDIS_DB_PORT'),
+            password=env.str('REDIS_DB_PASSWORD')
+        )
+    return db
+
+
+def get_access_keeper() -> motlin_api.Access:
+    global access_keeper
+    if not access_keeper:
+        access_keeper = motlin_api.Access(env.str('MOTLIN_CLIENT_ID'), env.str('MOTLIN_CLIENT_SECRET'))
+    return access_keeper
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     env = environs.Env()
     env.read_env()
-    access_keeper = motlin_api.Access(env.str('MOTLIN_CLIENT_ID'), env.str('MOTLIN_CLIENT_SECRET'))
-    DATABASE = Redis(
-        host=env.str('REDIS_DB_ADDRESS'),
-        port=env.int('REDIS_DB_PORT'),
-        password=env.str('REDIS_DB_PASSWORD')
-    )
     app.run(debug=True)
