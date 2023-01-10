@@ -20,7 +20,7 @@ class EventType(enum.Enum):
 
 
 @app.route('/', methods=['GET'])
-def verify():
+def verify() -> tuple[str, int]:
     """
     При верификации вебхука у Facebook он отправит запрос на этот адрес. На него нужно ответить VERIFY_TOKEN.
     """
@@ -32,7 +32,8 @@ def verify():
     return "Hello world", 200
 
 
-def get_menu_by_category(category_id, categories, pizza_logo_url, pizza_categories_url):
+def get_menu_by_category(category_id: str, categories: list[dict[str, Any]], pizza_logo_url: str,
+                         pizza_categories_url: str) -> tuple[list[dict[str, Any]], dict[str, str]]:
     max_products_on_page = 10
     extra_elements = 2  # manage element and categories element
     max_buttons_for_element = 3
@@ -237,7 +238,7 @@ def handle_users_reply(sender_id: str, message_text: str, event_type: EventType)
 
 
 @app.route('/', methods=['POST'])
-def webhook():
+def webhook() -> tuple[str, int]:
     """
     Основной вебхук, на который будут приходить сообщения от Facebook.
     """
