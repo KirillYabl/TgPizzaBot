@@ -32,7 +32,7 @@ def verify():
     return "Hello world", 200
 
 
-def get_menu_by_category(category_id, categories):
+def get_menu_by_category(category_id, categories, pizza_logo_url, pizza_categories_url):
     max_products_on_page = 10
     extra_elements = 2  # manage element and categories element
     max_buttons_for_element = 3
@@ -62,7 +62,7 @@ def get_menu_by_category(category_id, categories):
             {
                 'title': 'Меню',
                 'subtitle': 'Добавьте пиццы в корзину и сделайте заказ',
-                'image_url': env.str('PIZZA_LOGO_URL'),
+                'image_url': pizza_logo_url,
                 'buttons': [
                     {
                         'type': 'postback',
@@ -80,7 +80,7 @@ def get_menu_by_category(category_id, categories):
             {
                 'title': 'Не нашли нужную пиццу?',
                 'subtitle': 'Остальные пиццы можно посмотреть в одной из категорий',
-                'image_url': env.str('PIZZA_CATEGORIES_URL'),
+                'image_url': pizza_categories_url,
                 'buttons': [
                                {
                                    'type': 'postback',
@@ -107,7 +107,7 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
     elements = DATABASE.get(f'menu:{category_id}')
     if not elements:
         categories = motlin_api.get_all_categories(access_keeper)
-        elements, image_urls = get_menu_by_category(category_id, categories)
+        elements, image_urls = get_menu_by_category(category_id, categories, env.str('PIZZA_LOGO_URL'), env.str('PIZZA_CATEGORIES_URL'))
         DATABASE.set(f'menu:{category_id}', json.dumps(elements))
     else:
         elements = json.loads(elements.decode('utf-8'))
@@ -117,7 +117,7 @@ def handle_start(sender_id: str, message_text: str, event_type: EventType) -> st
     return 'MENU'
 
 
-def construct_cart(sender_id: str) -> list[dict[str, Any]]:
+def construct_cart(sender_id: str, cart_image_url: str) -> list[dict[str, Any]]:
     cart_items_info = motlin_api.get_cart_items_info(access_keeper, sender_id)
     images = DATABASE.get('pizza_images')
     if images:
@@ -131,7 +131,7 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
             {
                 'title': 'Корзина',
                 'subtitle': f'Ваш заказ на сумму {total_price}',
-                'image_url': env.str('CART_IMAGE_URL'),
+                'image_url': cart_image_url,
                 'buttons': [
                     {
                         'type': 'postback',
@@ -154,7 +154,7 @@ def construct_cart(sender_id: str) -> list[dict[str, Any]]:
             {
                 'title': f'{item["name"]} ({item["quantity"]} шт.)',
                 'subtitle': item['description'],
-                'image_url': images.get(item["product_id"], None) or motlin_api.get_file_href_by_id(
+                'image_url': images.get(item["product_id"], '') or motlin_api.get_file_href_by_id(
                     access_keeper,
                     motlin_api.get_product_by_id(
                         access_keeper,
@@ -195,15 +195,15 @@ def handle_menu(sender_id: str, message_text: str, event_type: EventType) -> str
             product_id = message_text.split('ADD_TO_CART_ONE_MORE:')[1]
             quantity = 1
             motlin_api.add_product_to_cart(access_keeper, product_id, quantity, sender_id)
-            elements = construct_cart(sender_id)
+            elements = construct_cart(sender_id, env.str('CART_IMAGE_URL'))
         elif message_text == 'CART':
             logger.debug('show cart')
-            elements = construct_cart(sender_id)
+            elements = construct_cart(sender_id, env.str('CART_IMAGE_URL'))
         elif message_text.startswith('REMOVE_FROM_CART:'):
             logger.debug('remove from cart')
             cart_item_id = message_text.split('REMOVE_FROM_CART:')[1]
             motlin_api.delete_cart_item(access_keeper, sender_id, cart_item_id)
-            elements = construct_cart(sender_id)
+            elements = construct_cart(sender_id, env.str('CART_IMAGE_URL'))
         elif message_text == 'MENU':
             condition = handle_start(sender_id, message_text, event_type)
             return condition
@@ -259,7 +259,7 @@ def webhook():
         categories = motlin_api.get_all_categories(access_keeper)
         images = {}
         for pizza_category in categories:
-            elements, image_urls = get_menu_by_category(pizza_category['id'], categories)
+            elements, image_urls = get_menu_by_category(pizza_category['id'], categories, env.str('PIZZA_LOGO_URL'), env.str('PIZZA_CATEGORIES_URL'))
             images.update(image_urls)
             DATABASE.set(f'menu:{pizza_category["id"]}', json.dumps(elements))
         DATABASE.set('pizza_images', json.dumps(images))
