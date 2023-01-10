@@ -84,19 +84,14 @@ def get_products(access_keeper, category_id=None):
     logger.debug('getting products...')
     headers = get_authorization_headers(access_keeper)
 
-    get_kwargs = {
-        'url': 'https://api.moltin.com/v2/products',
-        'headers': headers
-    }
-
+    filters = None
     if category_id:
         logger.debug(f'filtering by category={category_id}')
-        params = {
+        filters = {
             'filter': f'eq(category.id,{category_id})'
         }
-        get_kwargs['params'] = params
 
-    response = requests.get(**get_kwargs)
+    response = requests.get('https://api.moltin.com/v2/products', headers=headers, params=filters)
     response.raise_for_status()
 
     products = response.json()['data']
