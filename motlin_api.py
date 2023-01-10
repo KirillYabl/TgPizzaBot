@@ -450,6 +450,10 @@ def get_all_entries_of_flow(access_keeper, flow_slug):
 
 
 def create_integration(access_keeper, webhook_url):
+    """Add webhook integration with motlin
+    :param access_keeper: object, Access class instance
+    :param webhook_url: str, url of server which will get information from motlin
+    """
     logger.debug('creating webhook integration...')
     headers = get_authorization_headers(access_keeper)
     headers['Content-Type'] = 'application/json'
