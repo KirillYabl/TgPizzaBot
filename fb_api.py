@@ -12,7 +12,7 @@ def send_message(token: str, recipient_id: str, message_text: str) -> None:
     logger.debug('sending message...')
     params = {"access_token": token}
     headers = {"Content-Type": "application/json"}
-    request_content = json.dumps({
+    message = json.dumps({
         "recipient": {
             "id": recipient_id
         },
@@ -21,7 +21,7 @@ def send_message(token: str, recipient_id: str, message_text: str) -> None:
         }
     })
     response = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers,
-                             data=request_content)
+                             data=message)
     response.raise_for_status()
     logger.debug('message sent')
 
@@ -32,7 +32,7 @@ def send_carousel_buttons(token: str, recipient_id: str, elements: list[dict[str
     params = {"access_token": token}
     headers = {'Content-Type': 'application/json'}
 
-    request_content = json.dumps({
+    carousel = json.dumps({
         'recipient': {
             'id': recipient_id,
         },
@@ -48,6 +48,6 @@ def send_carousel_buttons(token: str, recipient_id: str, elements: list[dict[str
     })
 
     response = requests.post('https://graph.facebook.com/v2.6/me/messages',
-                             headers=headers, data=request_content, params=params)
+                             headers=headers, data=carousel, params=params)
     response.raise_for_status()
     logger.debug('buttons sent')
